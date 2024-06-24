@@ -1,6 +1,0 @@
-module DXPToolsLib {
-  umbrella header "DXPToolsLib-umbrella.h"
-
-  export *
-  module * { export * }
-}
