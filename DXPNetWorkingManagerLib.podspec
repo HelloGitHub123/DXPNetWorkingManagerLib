@@ -1,5 +1,5 @@
 #
-#  Be sure to run `pod spec lint DXPNetWorkingManagerLib.podspec.podspec' to ensure this is a
+#  Be sure to run `pod spec lint DXPNetWorkingManagerLib.podspec' to ensure this is a
 #  valid spec and to remove all comments including this before submitting the spec.
 #
 #  To learn more about Podspec attributes see https://guides.cocoapods.org/syntax/podspec.html
@@ -15,9 +15,9 @@ Pod::Spec.new do |spec|
   #  summary should be tweet-length, and the description more in depth.
   #
 
-  spec.name         = "DXPNetWorkingManagerLib.podspec"
+  spec.name         = "DXPNetWorkingManagerLib"
   spec.version      = "1.0.0"
-  spec.summary      = "A short description of DXPNetWorkingManagerLib.podspec."
+  spec.summary      = "DXP NetWork"
 
   # This description is used to generate tags and improve search results.
   #   * Think: What does it do? Why did you write it? What is the focus?
@@ -37,7 +37,7 @@ Pod::Spec.new do |spec|
   #  Popular ones are 'MIT', 'BSD' and 'Apache License, Version 2.0'.
   #
 
-  spec.license      = "MIT (example)"
+  spec.license      = "MIT"
   # spec.license      = { :type => "MIT", :file => "FILE_LICENSE" }
 
 
@@ -63,7 +63,7 @@ Pod::Spec.new do |spec|
   #
 
   # spec.platform     = :ios
-    spec.platform     = :ios, "12.0"
+   spec.platform     = :ios, "12.0"
 
   #  When using multiple platforms
   # spec.ios.deployment_target = "5.0"
@@ -89,7 +89,7 @@ Pod::Spec.new do |spec|
   #  Not including the public_header_files will make all headers public.
   #
 
-  spec.source_files  = "DXPNetWorkingManagerLib/**/*"
+  spec.source_files  = "DXPNetWorkingManagerLib/**/*.{h,m}"
   #spec.exclude_files = "Classes/Exclude"
 
   # spec.public_header_files = "Classes/**/*.h"
@@ -118,7 +118,7 @@ Pod::Spec.new do |spec|
   # spec.framework  = "SomeFramework"
   # spec.frameworks = "SomeFramework", "AnotherFramework"
 
-    spec.dependency 'AFNetworking', '~> 4.0.1'
+spec.dependency 'AFNetworking', '~> 4.0.1'
     spec.dependency 'DXPToolsLib'
 
   # spec.library   = "iconv"

@@ -1494,9 +1494,9 @@
 			};
 			name = Debug;
 		};
-		A6C80A24DF5D4A49872A12FAF9EE3FB1 /* Debug */ = {
+		A7A91A958ED7F3F6ABEF4D0B4A446455 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 04DDC58D2847856B56762CCC70F4F025 /* DXPToolsLib.debug.xcconfig */;
+			baseConfigurationReference = 72700D7886B28712EB0AA2632C1700A2 /* DXPToolsLib.release.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
@@ -1504,7 +1504,7 @@
 				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "";
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
 				GCC_PREFIX_HEADER = "Target Support Files/DXPToolsLib/DXPToolsLib-prefix.pch";
-				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MODULEMAP_FILE = Headers/Public/DXPToolsLib/DXPToolsLib.modulemap;
 				OTHER_LDFLAGS = "";
 				OTHER_LIBTOOLFLAGS = "";
@@ -1516,8 +1516,9 @@
 				SKIP_INSTALL = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ";
 				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
 			};
-			name = Debug;
+			name = Release;
 		};
 		C873D3C071BDDC046D6E8F63C69C2591 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -1606,32 +1607,6 @@
 			};
 			name = Release;
 		};
-		CD0DFFF13962F13924CFF6BC5F681D0C /* Release */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 72700D7886B28712EB0AA2632C1700A2 /* DXPToolsLib.release.xcconfig */;
-			buildSettings = {
-				CLANG_ENABLE_OBJC_WEAK = NO;
-				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
-				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "";
-				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
-				GCC_PREFIX_HEADER = "Target Support Files/DXPToolsLib/DXPToolsLib-prefix.pch";
-				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
-				MODULEMAP_FILE = Headers/Public/DXPToolsLib/DXPToolsLib.modulemap;
-				OTHER_LDFLAGS = "";
-				OTHER_LIBTOOLFLAGS = "";
-				PRIVATE_HEADERS_FOLDER_PATH = "";
-				PRODUCT_MODULE_NAME = DXPToolsLib;
-				PRODUCT_NAME = DXPToolsLib;
-				PUBLIC_HEADERS_FOLDER_PATH = "";
-				SDKROOT = iphoneos;
-				SKIP_INSTALL = YES;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ";
-				TARGETED_DEVICE_FAMILY = "1,2";
-				VALIDATE_PRODUCT = YES;
-			};
-			name = Release;
-		};
 		CE48E3BD932347092E18E4E2C724869C /* Release */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 423A45F53F96C10B213FA409404B91E1 /* SDWebImage.release.xcconfig */;
@@ -1697,14 +1672,39 @@
 			};
 			name = Debug;
 		};
+		FDEBC8C80253A54FC3BA0C5A2700F888 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 04DDC58D2847856B56762CCC70F4F025 /* DXPToolsLib.debug.xcconfig */;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "";
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
+				GCC_PREFIX_HEADER = "Target Support Files/DXPToolsLib/DXPToolsLib-prefix.pch";
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				MODULEMAP_FILE = Headers/Public/DXPToolsLib/DXPToolsLib.modulemap;
+				OTHER_LDFLAGS = "";
+				OTHER_LIBTOOLFLAGS = "";
+				PRIVATE_HEADERS_FOLDER_PATH = "";
+				PRODUCT_MODULE_NAME = DXPToolsLib;
+				PRODUCT_NAME = DXPToolsLib;
+				PUBLIC_HEADERS_FOLDER_PATH = "";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
 		1ECFFC789C99DFA29BD29F8CF5039F51 /* Build configuration list for PBXNativeTarget "DXPToolsLib" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				A6C80A24DF5D4A49872A12FAF9EE3FB1 /* Debug */,
-				CD0DFFF13962F13924CFF6BC5F681D0C /* Release */,
+				FDEBC8C80253A54FC3BA0C5A2700F888 /* Debug */,
+				A7A91A958ED7F3F6ABEF4D0B4A446455 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

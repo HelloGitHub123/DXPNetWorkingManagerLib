@@ -11,7 +11,7 @@ target 'DXPNetWorkingManagerLib' do
   # use_frameworks!
 
 
-  pod 'DXPToolsLib', :git => 'https://gitee.com/leelin880/DXPToolsLib'
+  pod 'DXPToolsLib'
   pod 'AFNetworking', '~> 4.0.1'
 
 	
