@@ -1,0 +1,48 @@
+PODS:
+  - AFNetworking (4.0.1):
+    - AFNetworking/NSURLSession (= 4.0.1)
+    - AFNetworking/Reachability (= 4.0.1)
+    - AFNetworking/Security (= 4.0.1)
+    - AFNetworking/Serialization (= 4.0.1)
+    - AFNetworking/UIKit (= 4.0.1)
+  - AFNetworking/NSURLSession (4.0.1):
+    - AFNetworking/Reachability
+    - AFNetworking/Security
+    - AFNetworking/Serialization
+  - AFNetworking/Reachability (4.0.1)
+  - AFNetworking/Security (4.0.1)
+  - AFNetworking/Serialization (4.0.1)
+  - AFNetworking/UIKit (4.0.1):
+    - AFNetworking/NSURLSession
+  - DXPToolsLib (0.1.2):
+    - SDWebImage
+  - SDWebImage (5.19.2):
+    - SDWebImage/Core (= 5.19.2)
+  - SDWebImage/Core (5.19.2)
+
+DEPENDENCIES:
+  - AFNetworking (~> 4.0.1)
+  - DXPToolsLib (from `https://gitee.com/leelin880/DXPToolsLib`)
+
+SPEC REPOS:
+  https://github.com/CocoaPods/Specs.git:
+    - AFNetworking
+    - SDWebImage
+
+EXTERNAL SOURCES:
+  DXPToolsLib:
+    :git: https://gitee.com/leelin880/DXPToolsLib
+
+CHECKOUT OPTIONS:
+  DXPToolsLib:
+    :commit: f9918957b7e26f5bc2133acb7fd9c2dce3b1e1d1
+    :git: https://gitee.com/leelin880/DXPToolsLib
+
+SPEC CHECKSUMS:
+  AFNetworking: 3bd23d814e976cd148d7d44c3ab78017b744cd58
+  DXPToolsLib: 3a5fb5d05d3c475a863fc483107bfa08a8a65d6b
+  SDWebImage: dfe95b2466a9823cf9f0c6d01217c06550d7b29a
+
+PODFILE CHECKSUM: 62035b52b82328df1a7203aa6b6f7ac2e5e42959
+
+COCOAPODS: 1.12.0
