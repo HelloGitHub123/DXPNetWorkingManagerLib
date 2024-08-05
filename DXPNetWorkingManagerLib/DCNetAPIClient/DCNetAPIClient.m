@@ -142,7 +142,7 @@ static dispatch_once_t onceTokenForUC;
                 aPathStr = [[aPathStr substringToIndex:aPathStr.length-1] mutableCopy];
                 
             }
-            NSString * token = dcIsEmptyString(self.token)?@"":self.token;
+            NSString * token = dcIsEmptyString([DCNetAPIClient sharedClient].token)?@"":[DCNetAPIClient sharedClient].token;
             
             NSString * apathNew = [aPathStr stringByReplacingOccurrencesOfString:@"/ecare/" withString:@"/"];
             if ([apathNew containsString:@"mccm-outerfront/dmc/"]) {
@@ -197,7 +197,7 @@ static dispatch_once_t onceTokenForUC;
             break;
         }
         case Post:{
-            NSString * token = dcIsEmptyString(self.token)?@"":self.token;
+            NSString * token = dcIsEmptyString([DCNetAPIClient sharedClient].token)?@"":[DCNetAPIClient sharedClient].token;
             // 参数处理
             NSString * codeSign = [self dictionaryToJson:params];
             NSRegularExpression *regular = [NSRegularExpression regularExpressionWithPattern:@"[^a-zA-Z0-9]" options:0 error:NULL];
@@ -452,7 +452,7 @@ static dispatch_once_t onceTokenForUC;
     NSString *token = [responses.allHeaderFields objectForKey:@"Token"];
     if (!dcIsEmptyString(token)) {
 //        [HJGlobalDataManager shareInstance].signInResponseModel.token = token;
-		self.token = token;
+		[DCNetAPIClient sharedClient].token = token;
 		if (self.respTokenBlock) {
 			self.respTokenBlock(token);
 		}
