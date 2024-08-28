@@ -79,4 +79,13 @@ typedef enum {
 - (void)downloadFile:(NSString *)urlStr method:(NSString *)method paramaters:(NSDictionary *)paramaters CompleteBlock:(CompleteBlock)completeBlock;
 
 
+/// eg: 文件下载
+/// @param downLoadURL  下载链接
+/// @param method  方式 Post 、Get
+/// @param paramaters  参数
+/// @param downloadName  下载目标目录名称
+/// @param fileName 文件名称
+/// @param completeBlock  回调
+- (void)downloadFile:(NSString *)downLoadURL method:(NSString *)method paramaters:(NSDictionary *)paramaters downloadName:(NSString *)downloadName fileName:(NSString *)fileName CompleteBlock:(CompleteBlock)completeBlock;
+
 @end

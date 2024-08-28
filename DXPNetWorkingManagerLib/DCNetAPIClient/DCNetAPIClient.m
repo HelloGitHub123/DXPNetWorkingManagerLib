@@ -441,6 +441,62 @@ static dispatch_once_t onceTokenForUC;
     
 }
 
+/// eg: 文件下载
+/// @param downLoadURL  下载链接
+/// @param method  方式 Post 、Get
+/// @param paramaters  参数
+/// @param downloadName  下载目标目录名称
+/// @param fileName 文件名称
+/// @param completeBlock  回调
+- (void)downloadFile:(NSString *)downLoadURL method:(NSString *)method paramaters:(NSDictionary *)paramaters downloadName:(NSString *)downloadName fileName:(NSString *)fileName CompleteBlock:(CompleteBlock)completeBlock {
+	
+	// 创建网络下载对象
+	AFURLSessionManager *manager = [[AFURLSessionManager alloc] initWithSessionConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
+	// 设置下载地址
+	NSMutableURLRequest *request = [self.httpManager.requestSerializer requestWithMethod:method URLString:downLoadURL parameters:paramaters error:nil];
+
+	UIDevice *device = [UIDevice currentDevice];
+	if ([[device model] hasSuffix:@"Simulator"]) { // 在模拟器不保存到文件中
+//		return;
+	}
+	if (downloadName.length == 0) {
+		downloadName = @"Download"; // 给个默认的路径
+	}
+	// 获取Document目录下的目标文件夹，若没有则新建
+	NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+	NSString *downloadDirectory = [[paths objectAtIndex:0] stringByAppendingPathComponent:downloadName];
+	
+	NSFileManager *fileManager = [NSFileManager defaultManager];
+	BOOL fileExists = [fileManager fileExistsAtPath:downloadDirectory];
+	if (!fileExists) {
+		[fileManager createDirectoryAtPath:downloadDirectory withIntermediateDirectories:YES attributes:nil error:nil];
+	}
+	// 开始请求下载
+	__block NSString *fileNameTemp = fileName;
+	NSURLSessionDownloadTask *downloadTask = [manager downloadTaskWithRequest:request progress:^(NSProgress * _Nonnull downloadProgress) {
+		
+	} destination:^NSURL * _Nonnull(NSURL * _Nonnull targetPath, NSURLResponse * _Nonnull response) {
+		/* 设定下载到的位置 */
+		if (fileNameTemp.length == 0) {
+			fileNameTemp = response.suggestedFilename;
+		}
+		NSString *fileStr = [downloadDirectory stringByAppendingPathComponent:fileNameTemp];
+		DDLog(@"===fileStr===%@",fileStr);
+		return [NSURL fileURLWithPath:fileStr];
+
+	} completionHandler:^(NSURLResponse * _Nonnull response, NSURL * _Nullable filePath, NSError * _Nullable error) {
+		// 下载完成之后的操作
+		if (error) {
+			[self failRequestWithTask:nil error:error block:completeBlock];
+			DDLog(@"error:%@",error);
+		} else {
+			[self successRequestWithTask:nil res:nil block:completeBlock];
+			DDLog(@"下载完成");
+		}
+	}];
+	[downloadTask resume];
+}
+
 #pragma mark - 成功回调
 - (void)successRequestWithTask:(NSURLSessionDataTask *)task res:(id)res block:(void (^)(id data, NSError *error))block {
     NSHTTPURLResponse *responses = (NSHTTPURLResponse *)task.response;
