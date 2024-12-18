@@ -14,6 +14,13 @@
 #import <DXPToolsLib/HJMBProgressHUD.h>
 #import <DXPToolsLib/HJMBProgressHUD+Category.h>
 
+@interface DCNetAPIClient ()
+
+@property (nonatomic, strong) NSMutableDictionary *inputParamDic;
+@property (nonatomic, strong) NSMutableDictionary *startTimeDic;
+@end
+
+
 @implementation DCNetAPIClient
 
 static DCNetAPIClient *_sharedClient = nil;
@@ -72,7 +79,10 @@ static dispatch_once_t onceTokenForUC;
     if (!self) {
         return ;
     }
-
+	
+	self.inputParamDic = [NSMutableDictionary dictionary];
+	self.startTimeDic = [NSMutableDictionary dictionary];
+	
     _httpManager = [[AFHTTPSessionManager alloc] initWithBaseURL:url];
     self.httpManager.responseSerializer = [AFJSONResponseSerializer serializer];//[AFHTTPResponseSerializer serializer];
 //    ((AFJSONResponseSerializer *)self.httpManager.responseSerializer).removesKeysWithNullValues= YES;
@@ -102,6 +112,14 @@ static dispatch_once_t onceTokenForUC;
     if (!aPath || aPath.length <= 0) {
         return;
     }
+	
+	if ([aPath containsString:@"?"]) {
+		NSArray *aPathList = [aPath componentsSeparatedByString:@"?"];
+		self.startTimeDic[aPathList[0]] = [NSDate date];
+	} else {
+		self.startTimeDic[aPath] = [NSDate date];
+	}
+	
     //log请求数据
 //    aPath = [aPath stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
     aPath = [aPath stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLQueryAllowedCharacterSet]];
@@ -140,8 +158,16 @@ static dispatch_once_t onceTokenForUC;
                 }];
                 
                 aPathStr = [[aPathStr substringToIndex:aPathStr.length-1] mutableCopy];
+				
+				NSString *paramStr = dcIsEmptyString([self dictionaryToJson:params])?@"":[self dictionaryToJson:params];
+				self.inputParamDic[aPath] = paramStr;
                 
-            }
+			} else {
+				if ([aPath containsString:@"?"]) {
+					NSArray *aPathList = [aPath componentsSeparatedByString:@"?"];
+					self.inputParamDic[aPathList[0]] = aPathList[1];
+				}
+			}
             NSString * token = dcIsEmptyString([DCNetAPIClient sharedClient].token)?@"":[DCNetAPIClient sharedClient].token;
             
             NSString * apathNew = [aPathStr stringByReplacingOccurrencesOfString:@"/ecare/" withString:@"/"];
@@ -200,6 +226,8 @@ static dispatch_once_t onceTokenForUC;
             NSString * token = dcIsEmptyString([DCNetAPIClient sharedClient].token)?@"":[DCNetAPIClient sharedClient].token;
             // 参数处理
             NSString * codeSign = [self dictionaryToJson:params];
+			self.inputParamDic[aPath] = codeSign;
+			
             NSRegularExpression *regular = [NSRegularExpression regularExpressionWithPattern:@"[^a-zA-Z0-9]" options:0 error:NULL];
             codeSign = [regular stringByReplacingMatchesInString:codeSign options:0 range:NSMakeRange(0, [codeSign length]) withTemplate:@""];
             codeSign = [codeSign stringByReplacingOccurrencesOfString:@"null" withString:@""];
@@ -263,6 +291,9 @@ static dispatch_once_t onceTokenForUC;
     if (!aPath || aPath.length <= 0) {
         return;
     }
+	
+	self.startTimeDic[aPath] = [NSDate date];
+	
     //log请求数据
     aPath = [aPath stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLQueryAllowedCharacterSet]];
     [DCNetAPIClient addHttpHeader:aPath];
@@ -501,9 +532,17 @@ static dispatch_once_t onceTokenForUC;
 - (void)successRequestWithTask:(NSURLSessionDataTask *)task res:(id)res block:(void (^)(id data, NSError *error))block {
     NSHTTPURLResponse *responses = (NSHTTPURLResponse *)task.response;
     NSDictionary* headFilesDic = responses.allHeaderFields;
+	
+	// 请求成功后计算消耗时长
+	NSTimeInterval elapsedTime = - [self.startTimeDic[responses.URL.path] timeIntervalSinceNow];
+	NSString *event_duration = [NSString stringWithFormat:@"%.2f", elapsedTime];
     
     DDLog(@"--------服务器返回的调用链:-------\n%@",[headFilesDic objectForKey:@"ITRACING_TRACE_ID"]);
-    
+	// 埋点回调
+	if (self.respTrackBlock) {
+		self.respTrackBlock(@"ServiceCallInfoCollection", responses, self.inputParamDic, event_duration, @(1), @"", @"");
+	}
+
     //所有请求接口的地方增加通用的逻辑：如果接口返回的请求头中有 token，则在后续请求的请求头中需要使用最新的token覆盖原本登录返回的token值
     NSString *token = [responses.allHeaderFields objectForKey:@"Token"];
     if (!dcIsEmptyString(token)) {
@@ -591,6 +630,15 @@ static dispatch_once_t onceTokenForUC;
 //        [HJMBProgressHUD showText:dcObjectOrEmptyStr([dic objectForKey:@"message"])];
         block(dic, error);
     }
+	
+	// 请求成功后计算消耗时长
+	NSTimeInterval elapsedTime = - [self.startTimeDic[responses.URL.path] timeIntervalSinceNow];
+	NSString *event_duration = [NSString stringWithFormat:@"%.2f", elapsedTime];
+	// 埋点回调
+	if (self.respTrackBlock) {
+		self.respTrackBlock(@"ServiceCallInfoCollection", responses, self.inputParamDic, event_duration, @(0), [dic objectForKey:@"code"], [dic objectForKey:@"resultMsg"]);
+	}
+	
 }
 #pragma mark -- fuction
 -(NSString*)stringWithDict:(NSDictionary*)dict{

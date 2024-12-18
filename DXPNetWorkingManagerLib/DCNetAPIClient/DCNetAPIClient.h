@@ -37,6 +37,16 @@ typedef enum {
 // HTTP 状态码回调处理 401 304 502 504 593
 @property (nonatomic, copy) void (^respHTTPCodeBlock)(NSInteger statusCode);
 
+/// eg: 埋点
+/// @return trackName: 埋点名称
+/// @return responses：响应报文
+/// @return inputParamDic  输入参数
+/// @return event_duration  接口响应时长
+/// @return isSuccess  业务是否成功
+/// @return errorCode  失败错误码
+/// @return failReason  失败原因
+@property (nonatomic, copy) void (^respTrackBlock)(NSString *trackName, NSHTTPURLResponse *responses, NSMutableDictionary *inputParamDic, NSString *event_duration, NSNumber *isSuccess ,NSString *errorCode, NSString *failReason);
+
 + (DCNetAPIClient *)sharedClient;
 + (DCNetAPIClient *)sharedMockClient;
 + (DCNetAPIClient *)sharedUcClient;
