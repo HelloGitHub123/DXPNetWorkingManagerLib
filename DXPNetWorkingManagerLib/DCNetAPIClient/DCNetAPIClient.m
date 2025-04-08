@@ -600,7 +600,7 @@ static dispatch_once_t onceTokenForUC;
 		}
 		
 		if (self.respHTTPCodeBlock) {
-			self.respHTTPCodeBlock(responses.statusCode);
+			self.respHTTPCodeBlock(responses.statusCode, error);
 		}
 		
 	}

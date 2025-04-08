@@ -35,7 +35,7 @@ typedef enum {
 @property (nonatomic, copy) void (^respTokenBlock)(NSString *token);
 
 // HTTP 状态码回调处理 401 304 502 504 593
-@property (nonatomic, copy) void (^respHTTPCodeBlock)(NSInteger statusCode);
+@property (nonatomic, copy) void (^respHTTPCodeBlock)(NSInteger statusCode,NSError *error);
 
 /// eg: 埋点
 /// @return trackName: 埋点名称
