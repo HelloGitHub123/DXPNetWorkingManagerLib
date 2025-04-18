@@ -170,28 +170,43 @@ static dispatch_once_t onceTokenForUC;
 			}
             NSString * token = dcIsEmptyString([DCNetAPIClient sharedClient].token)?@"":[DCNetAPIClient sharedClient].token;
             
-            NSString * apathNew = [aPathStr stringByReplacingOccurrencesOfString:@"/ecare/" withString:@"/"];
-            if ([apathNew containsString:@"mccm-outerfront/dmc/"]) {
-                NSTimeInterval interval = [[NSDate date] timeIntervalSince1970];
-                long long totalMilliseconds = interval*1000 ;
-                NSString *curTime = [[NSString alloc] initWithFormat:@"%lld", totalMilliseconds];
-                token = [NSString stringWithFormat:@"%@%@",curTime,token];
+            NSString * md5str = @"";
+            if (self.useMptSignCode) {
+                if ([aPath containsString:@".mpt.com.mm/oauth/authorize?redirect="]) {
+                    
+                }
+                else
+                {
+                    NSString * apathNew = [aPathStr stringByReplacingOccurrencesOfString:@"/ecare/webs" withString:@""];
+                    apathNew = [apathNew stringByReplacingOccurrencesOfString:@"ecare/webs" withString:@""];
+                    apathNew = [apathNew stringByReplacingOccurrencesOfString:@"/promotion-rest-boot" withString:@""];
+                    apathNew = [apathNew stringByReplacingOccurrencesOfString:@"/ecare" withString:@""];
+                    md5str = [NSString stringWithFormat:@"%@%@%@",[NSString stringWithFormat:@"%@",apathNew],token,@"32BytesString"];
+                }
+            } else {
+                NSString * apathNew = [aPathStr stringByReplacingOccurrencesOfString:@"/ecare/" withString:@"/"];
+                if ([apathNew containsString:@"mccm-outerfront/dmc/"]) {
+                    NSTimeInterval interval = [[NSDate date] timeIntervalSince1970];
+                    long long totalMilliseconds = interval*1000 ;
+                    NSString *curTime = [[NSString alloc] initWithFormat:@"%lld", totalMilliseconds];
+                    token = [NSString stringWithFormat:@"%@%@",curTime,token];
+                }
+                
+                apathNew = [apathNew stringByReplacingOccurrencesOfString:@"/mccm-outerfront/dmc/" withString:@"/"];
+                apathNew = [apathNew stringByReplacingOccurrencesOfString:@"mccm-outerfront/dmc/" withString:@"/"];
+                
+                apathNew = [apathNew stringByReplacingOccurrencesOfString:@"ecare/" withString:@"/"];
+                _dcMD5SerectStr = dcIsEmptyString(_dcMD5SerectStr)?@"32BytesString":_dcMD5SerectStr;
+               
+                DDLog(@"=========aPathStr========%@",apathNew);
+                
+                if ([aPath containsString:@"promotion-rest-boot"]) {
+                    NSArray *pathList = [apathNew componentsSeparatedByString:@"/promotion-rest-boot"];
+                    apathNew = pathList[1];
+                }
+                
+                NSString * md5str = [NSString stringWithFormat:@"%@%@%@",[NSString stringWithFormat:@"%@",apathNew],token,_dcMD5SerectStr];//登录成功后获取token
             }
-            
-            apathNew = [apathNew stringByReplacingOccurrencesOfString:@"/mccm-outerfront/dmc/" withString:@"/"];
-            apathNew = [apathNew stringByReplacingOccurrencesOfString:@"mccm-outerfront/dmc/" withString:@"/"];
-            
-            apathNew = [apathNew stringByReplacingOccurrencesOfString:@"ecare/" withString:@"/"];
-            _dcMD5SerectStr = dcIsEmptyString(_dcMD5SerectStr)?@"32BytesString":_dcMD5SerectStr;
-           
-            DDLog(@"=========aPathStr========%@",apathNew);
-            
-            if ([aPath containsString:@"promotion-rest-boot"]) {
-                NSArray *pathList = [apathNew componentsSeparatedByString:@"/promotion-rest-boot"];
-                apathNew = pathList[1];
-            }
-            
-            NSString * md5str = [NSString stringWithFormat:@"%@%@%@",[NSString stringWithFormat:@"%@",apathNew],token,_dcMD5SerectStr];//登录成功后获取token
             NSString *authToken  = [md5str SHA256];
             
             [self.httpManager.requestSerializer setValue:authToken forHTTPHeaderField:@"signcode"];
@@ -232,26 +247,36 @@ static dispatch_once_t onceTokenForUC;
             codeSign = [regular stringByReplacingMatchesInString:codeSign options:0 range:NSMakeRange(0, [codeSign length]) withTemplate:@""];
             codeSign = [codeSign stringByReplacingOccurrencesOfString:@"null" withString:@""];
             // URL处理
-            NSString * apathNew = [aPath stringByReplacingOccurrencesOfString:@"/ecare/" withString:@"/"];
-            if ([apathNew containsString:@"mccm-outerfront/dmc/"]) {
-                NSTimeInterval interval = [[NSDate date] timeIntervalSince1970];
-                long long totalMilliseconds = interval*1000 ;
-                NSString *curTime = [[NSString alloc] initWithFormat:@"%lld", totalMilliseconds];
-                token = [NSString stringWithFormat:@"%@%@",curTime,token];
-            }
-            apathNew = [apathNew stringByReplacingOccurrencesOfString:@"/mccm-outerfront/dmc/" withString:@"/"];
-            apathNew = [apathNew stringByReplacingOccurrencesOfString:@"mccm-outerfront/dmc/" withString:@"/"];
-            apathNew = [apathNew stringByReplacingOccurrencesOfString:@"ecare/" withString:@"/"];
-            
             NSString * authToken = @"";
-            if ([aPath containsString:@"promotion-rest-boot"]) {
-                NSArray *pathList = [apathNew componentsSeparatedByString:@"/promotion-rest-boot"];
-                apathNew = pathList[1];
-                NSString *md5str = [NSString stringWithFormat:@"%@%@%@%@",apathNew,codeSign,token,@"32BytesString"];//GCP接口签名
+            if (self.useMptSignCode) {
+                NSString * apathNew = [aPath stringByReplacingOccurrencesOfString:@"/ecare/webs" withString:@""];
+                apathNew = [apathNew stringByReplacingOccurrencesOfString:@"ecare/webs" withString:@""];
+                apathNew = [apathNew stringByReplacingOccurrencesOfString:@"/promotion-rest-boot" withString:@""];
+                apathNew = [apathNew stringByReplacingOccurrencesOfString:@"/ecare" withString:@""];
+                NSString * md5str = [NSString stringWithFormat:@"%@%@%@%@",apathNew,codeSign,token,@"32BytesString"];
                 authToken = [md5str SHA256];
             } else {
-                NSString *md5str = [NSString stringWithFormat:@"%@%@%@%@",apathNew,codeSign,token,@"32BytesString"];//登录成功后获取token
-                authToken = [md5str SHA256];
+                NSString * apathNew = [aPath stringByReplacingOccurrencesOfString:@"/ecare/" withString:@"/"];
+                if ([apathNew containsString:@"mccm-outerfront/dmc/"]) {
+                    NSTimeInterval interval = [[NSDate date] timeIntervalSince1970];
+                    long long totalMilliseconds = interval*1000 ;
+                    NSString *curTime = [[NSString alloc] initWithFormat:@"%lld", totalMilliseconds];
+                    token = [NSString stringWithFormat:@"%@%@",curTime,token];
+                }
+                apathNew = [apathNew stringByReplacingOccurrencesOfString:@"/mccm-outerfront/dmc/" withString:@"/"];
+                apathNew = [apathNew stringByReplacingOccurrencesOfString:@"mccm-outerfront/dmc/" withString:@"/"];
+                apathNew = [apathNew stringByReplacingOccurrencesOfString:@"ecare/" withString:@"/"];
+                
+                NSString * authToken = @"";
+                if ([aPath containsString:@"promotion-rest-boot"]) {
+                    NSArray *pathList = [apathNew componentsSeparatedByString:@"/promotion-rest-boot"];
+                    apathNew = pathList[1];
+                    NSString *md5str = [NSString stringWithFormat:@"%@%@%@%@",apathNew,codeSign,token,@"32BytesString"];//GCP接口签名
+                    authToken = [md5str SHA256];
+                } else {
+                    NSString *md5str = [NSString stringWithFormat:@"%@%@%@%@",apathNew,codeSign,token,@"32BytesString"];//登录成功后获取token
+                    authToken = [md5str SHA256];
+                }
             }
             
             [self.httpManager.requestSerializer setValue:authToken forHTTPHeaderField:@"signcode"];

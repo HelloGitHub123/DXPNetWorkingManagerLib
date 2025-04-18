@@ -31,6 +31,8 @@ typedef enum {
 
 @property (nonatomic, copy) NSString * dcMD5SerectStr;
 
+@property (nonatomic, assign) BOOL useMptSignCode;
+
 // 返回token
 @property (nonatomic, copy) void (^respTokenBlock)(NSString *token);
 
