@@ -33,6 +33,10 @@ typedef enum {
 
 @property (nonatomic, assign) BOOL useMptSignCode;
 
+@property (nonatomic, copy) NSString * clientKey;
+
+@property (nonatomic, copy) NSString * curTime;
+
 // 返回token
 @property (nonatomic, copy) void (^respTokenBlock)(NSString *token);
 

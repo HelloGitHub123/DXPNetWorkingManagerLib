@@ -205,7 +205,15 @@ static dispatch_once_t onceTokenForUC;
                     apathNew = pathList[1];
                 }
                 
-                NSString * md5str = [NSString stringWithFormat:@"%@%@%@",[NSString stringWithFormat:@"%@",apathNew],token,_dcMD5SerectStr];//登录成功后获取token
+				
+				if (!dcIsEmptyString(self.clientKey) && [aPath containsString:@"dxp/"]) {
+					[[DCNetAPIClient sharedClient].httpManager.requestSerializer setValue:[DCNetAPIClient sharedClient].curTime forHTTPHeaderField:@"Timestamp"];
+					
+					md5str = [NSString stringWithFormat:@"%@%@%@%@%@",[NSString stringWithFormat:@"%@",apathNew], [DCNetAPIClient sharedClient].curTime, self.clientKey,token,_dcMD5SerectStr];//登录成功后获取token
+				} else {
+					md5str = [NSString stringWithFormat:@"%@%@%@",[NSString stringWithFormat:@"%@",apathNew],token,_dcMD5SerectStr];//登录成功后获取token
+				}
+				
             }
             NSString *authToken  = [md5str SHA256];
             
@@ -268,14 +276,34 @@ static dispatch_once_t onceTokenForUC;
                 apathNew = [apathNew stringByReplacingOccurrencesOfString:@"ecare/" withString:@"/"];
                 
                 NSString * authToken = @"";
+				NSString *md5str = @"";
                 if ([aPath containsString:@"promotion-rest-boot"]) {
                     NSArray *pathList = [apathNew componentsSeparatedByString:@"/promotion-rest-boot"];
                     apathNew = pathList[1];
-                    NSString *md5str = [NSString stringWithFormat:@"%@%@%@%@",apathNew,codeSign,token,@"32BytesString"];//GCP接口签名
+					
+					if (!dcIsEmptyString(self.clientKey) && [aPath containsString:@"dxp/"]) {
+						
+						[[DCNetAPIClient sharedClient].httpManager.requestSerializer setValue:[DCNetAPIClient sharedClient].curTime forHTTPHeaderField:@"Timestamp"];
+						
+						md5str = [NSString stringWithFormat:@"%@%@%@%@%@%@",apathNew,codeSign, [DCNetAPIClient sharedClient].curTime, self.clientKey,token,@"32BytesString"];//GCP接口签名
+						
+					} else {
+						md5str = [NSString stringWithFormat:@"%@%@%@%@",apathNew,codeSign,token,@"32BytesString"];//GCP接口签名
+					}
                     authToken = [md5str SHA256];
                 } else {
-                    NSString *md5str = [NSString stringWithFormat:@"%@%@%@%@",apathNew,codeSign,token,@"32BytesString"];//登录成功后获取token
-                    authToken = [md5str SHA256];
+					
+					if (!dcIsEmptyString(self.clientKey) && [aPath containsString:@"dxp/"]) {
+						
+						[[DCNetAPIClient sharedClient].httpManager.requestSerializer setValue:[DCNetAPIClient sharedClient].curTime forHTTPHeaderField:@"Timestamp"];
+						
+						md5str = [NSString stringWithFormat:@"%@%@%@%@%@%@",apathNew,codeSign, [DCNetAPIClient sharedClient].curTime, self.clientKey,token,@"32BytesString"];//GCP接口签名
+						
+					} else {
+						md5str = [NSString stringWithFormat:@"%@%@%@%@",apathNew,codeSign,token,@"32BytesString"];//登录成功后获取token
+					}
+					
+					authToken = [md5str SHA256];
                 }
             }
             
@@ -727,6 +755,7 @@ static dispatch_once_t onceTokenForUC;
     long long time = [self getDateTimeTOMilliSeconds:[NSDate date]];
     
     NSString *curTime = [[NSString alloc] initWithFormat:@"%lld", time];
+	[DCNetAPIClient sharedClient].curTime = curTime;
 
     [[self sharedClient].httpManager.requestSerializer setValue:curTime forHTTPHeaderField:@"timestamp"];
     [[self sharedMockClient].httpManager.requestSerializer setValue:curTime forHTTPHeaderField:@"timestamp"];
