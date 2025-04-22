@@ -37,6 +37,8 @@ typedef enum {
 
 @property (nonatomic, copy) NSString * curTime;
 
+@property (nonatomic, assign) BOOL isAddNewDXPHeader; // 是否支持新的DXP接口请求头
+
 // 返回token
 @property (nonatomic, copy) void (^respTokenBlock)(NSString *token);
 

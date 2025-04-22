@@ -13,6 +13,7 @@
 #import <DXPToolsLib/SNAlertMessage.h>
 #import <DXPToolsLib/HJMBProgressHUD.h>
 #import <DXPToolsLib/HJMBProgressHUD+Category.h>
+#import <sys/utsname.h>
 
 @interface DCNetAPIClient ()
 
@@ -204,10 +205,10 @@ static dispatch_once_t onceTokenForUC;
                     NSArray *pathList = [apathNew componentsSeparatedByString:@"/promotion-rest-boot"];
                     apathNew = pathList[1];
                 }
-                
 				
-				if (!dcIsEmptyString(self.clientKey) && [aPath containsString:@"dxp/"]) {
-					[[DCNetAPIClient sharedClient].httpManager.requestSerializer setValue:[DCNetAPIClient sharedClient].curTime forHTTPHeaderField:@"Timestamp"];
+				if (self.isAddNewDXPHeader && [aPath containsString:@"dxp/"]) {
+					
+					[self addNewDXPHeader];
 					
 					md5str = [NSString stringWithFormat:@"%@%@%@%@%@",[NSString stringWithFormat:@"%@",apathNew], [DCNetAPIClient sharedClient].curTime, self.clientKey,token,_dcMD5SerectStr];//登录成功后获取token
 				} else {
@@ -275,15 +276,13 @@ static dispatch_once_t onceTokenForUC;
                 apathNew = [apathNew stringByReplacingOccurrencesOfString:@"mccm-outerfront/dmc/" withString:@"/"];
                 apathNew = [apathNew stringByReplacingOccurrencesOfString:@"ecare/" withString:@"/"];
                 
-                NSString * authToken = @"";
 				NSString *md5str = @"";
                 if ([aPath containsString:@"promotion-rest-boot"]) {
                     NSArray *pathList = [apathNew componentsSeparatedByString:@"/promotion-rest-boot"];
                     apathNew = pathList[1];
 					
-					if (!dcIsEmptyString(self.clientKey) && [aPath containsString:@"dxp/"]) {
-						
-						[[DCNetAPIClient sharedClient].httpManager.requestSerializer setValue:[DCNetAPIClient sharedClient].curTime forHTTPHeaderField:@"Timestamp"];
+					if (self.isAddNewDXPHeader && [aPath containsString:@"dxp/"]) {
+						[self addNewDXPHeader];
 						
 						md5str = [NSString stringWithFormat:@"%@%@%@%@%@%@",apathNew,codeSign, [DCNetAPIClient sharedClient].curTime, self.clientKey,token,@"32BytesString"];//GCP接口签名
 						
@@ -293,9 +292,9 @@ static dispatch_once_t onceTokenForUC;
                     authToken = [md5str SHA256];
                 } else {
 					
-					if (!dcIsEmptyString(self.clientKey) && [aPath containsString:@"dxp/"]) {
+					if (self.isAddNewDXPHeader && [aPath containsString:@"dxp/"]) {
 						
-						[[DCNetAPIClient sharedClient].httpManager.requestSerializer setValue:[DCNetAPIClient sharedClient].curTime forHTTPHeaderField:@"Timestamp"];
+						[self addNewDXPHeader];
 						
 						md5str = [NSString stringWithFormat:@"%@%@%@%@%@%@",apathNew,codeSign, [DCNetAPIClient sharedClient].curTime, self.clientKey,token,@"32BytesString"];//GCP接口签名
 						
@@ -332,6 +331,30 @@ static dispatch_once_t onceTokenForUC;
         default:
             break;
     }
+}
+
+// DXP 
+- (void)addNewDXPHeader {
+	
+	[self.httpManager.requestSerializer setValue:self.clientKey forHTTPHeaderField:@"clientKey"];
+	[self.httpManager.requestSerializer setValue:self.clientKey forHTTPHeaderField:@"X-Client-Key"];
+	[self.httpManager.requestSerializer setValue:[UIDevice currentDevice].identifierForVendor.UUIDString forHTTPHeaderField:@"Device-ID"];
+	// 设备型号
+	[self.httpManager.requestSerializer setValue:[self getCurrentDeviceModel] forHTTPHeaderField:@"Device-Model"];
+	// 系统
+	[self.httpManager.requestSerializer setValue:@"ios" forHTTPHeaderField:@"Os"];
+	// 手机设备的系统版本
+	UIDevice *currentDevice = [UIDevice currentDevice];
+	NSString *systemVersion = currentDevice.systemVersion;
+	[self.httpManager.requestSerializer setValue:systemVersion forHTTPHeaderField:@"Os-Version"];
+	// 版本号
+	[self.httpManager.requestSerializer setValue:[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"] forHTTPHeaderField:@"App-Version"];
+	// 语言
+	//    [[DCNetAPIClient sharedClient].httpManager.requestSerializer setValue:@"" forHTTPHeaderField:@"Accept-Language"];
+	// 登录返回的token
+	[self.httpManager.requestSerializer setValue:[DCNetAPIClient sharedClient].token forHTTPHeaderField:@"Token"];
+	[self.httpManager.requestSerializer setValue:[DCNetAPIClient sharedClient].curTime forHTTPHeaderField:@"Timestamp"];
+	
 }
 
 - (void)uploadImgWithPath:(NSString *)aPath
@@ -881,4 +904,112 @@ static dispatch_once_t onceTokenForUC;
     }
     return error;
 }
+
+// 设备型号
+- (NSString *)getCurrentDeviceModel {
+	struct utsname systemInfo;
+	uname(&systemInfo);
+	
+	NSString *platform = @"";
+	platform = [NSString stringWithCString:systemInfo.machine encoding:NSASCIIStringEncoding];
+	if([platform isEqualToString:@"iPhone1,1"])return@"iPhone 2G";
+	if([platform isEqualToString:@"iPhone1,2"])return@"iPhone 3G";
+	if([platform isEqualToString:@"iPhone2,1"])return@"iPhone 3GS";
+	if([platform isEqualToString:@"iPhone3,1"])return@"iPhone 4";
+	if([platform isEqualToString:@"iPhone3,2"])return@"iPhone 4";
+	if([platform isEqualToString:@"iPhone3,3"])return@"iPhone 4";
+	if([platform isEqualToString:@"iPhone4,1"])return@"iPhone 4S";
+	if([platform isEqualToString:@"iPhone5,1"])return@"iPhone 5";
+	if([platform isEqualToString:@"iPhone5,2"])return@"iPhone 5";
+	if([platform isEqualToString:@"iPhone5,3"])return@"iPhone 5c";
+	if([platform isEqualToString:@"iPhone5,4"])return@"iPhone 5c";
+	if([platform isEqualToString:@"iPhone6,1"])return@"iPhone 5s";
+	if([platform isEqualToString:@"iPhone6,2"])return@"iPhone 5s";
+	if([platform isEqualToString:@"iPhone7,1"])return@"iPhone 6 Plus";
+	if([platform isEqualToString:@"iPhone7,2"])return@"iPhone 6";
+	if([platform isEqualToString:@"iPhone8,1"])return@"iPhone 6s";
+	if([platform isEqualToString:@"iPhone8,2"])return@"iPhone 6s Plus";
+	if([platform isEqualToString:@"iPhone8,4"])return@"iPhone SE";
+	if([platform isEqualToString:@"iPhone9,1"])return@"iPhone 7";
+	if([platform isEqualToString:@"iPhone9,2"])return@"iPhone 7 Plus";
+	if([platform isEqualToString:@"iPhone10,1"])return@"iPhone 8";
+	if([platform isEqualToString:@"iPhone10,4"])return@"iPhone 8";
+	if([platform isEqualToString:@"iPhone10,2"])return@"iPhone 8 Plus";
+	if([platform isEqualToString:@"iPhone10,5"])return@"iPhone 8 Plus";
+	if([platform isEqualToString:@"iPhone10,3"])return@"iPhone X";
+	if([platform isEqualToString:@"iPhone10,6"])return@"iPhone X";
+	if([platform isEqualToString:@"iPhone11,8"])return@"iPhone XR";
+	if([platform isEqualToString:@"iPhone11,2"])return@"iPhone XS";
+	if([platform isEqualToString:@"iPhone11,4"])return@"iPhone XS Max";
+	if([platform isEqualToString:@"iPhone11,6"])return@"iPhone XS Max";
+	if([platform isEqualToString:@"iPhone12,1"])return@"iPhone 11";
+	if([platform isEqualToString:@"iPhone12,3"])return@"iPhone 11 Pro";
+	if([platform isEqualToString:@"iPhone12,5"])return@"iPhone 11 Pro Max";
+	if([platform isEqualToString:@"iPhone12,8"])return@"iPhone SE 2020";
+	//新添加
+	if([platform isEqualToString:@"iPhone13,1"])return@"iPhone 12 mini";
+	if([platform isEqualToString:@"iPhone13,2"])return@"iPhone 12";
+	if([platform isEqualToString:@"iPhone13,3"])return@"iPhone 12 Pro";
+	if([platform isEqualToString:@"iPhone13,4"])return@"iPhone 12 Pro Max";
+	if([platform isEqualToString:@"iPhone14,4"])return@"iPhone 13 mini";
+	if([platform isEqualToString:@"iPhone14,5"])return@"iPhone 13";
+	if([platform isEqualToString:@"iPhone14,2"])return@"iPhone 13 Pro";
+	if([platform isEqualToString:@"iPhone14,3"])return@"iPhone 13 Pro Max";
+	if([platform isEqualToString:@"iPhone14,6"])return@"iPhone SE 2022";
+	if([platform isEqualToString:@"iPhone14,7"])return@"iPhone 14";
+	if([platform isEqualToString:@"iPhone14,8"])return@"iPhone 14 Plus";
+	if([platform isEqualToString:@"iPhone15,2"])return@"iPhone 14 Pro";
+	if([platform isEqualToString:@"iPhone15,3"])return@"iPhone 14 Pro Max";
+	if([platform isEqualToString:@"iPhone15,4"])return@"iPhone 15";
+	if([platform isEqualToString:@"iPhone15,5"])return@"iPhone 15 Plus";
+	if([platform isEqualToString:@"iPhone16,1"])return@"iPhone 15 Pro";
+	if([platform isEqualToString:@"iPhone16,2"])return@"iPhone 15 Pro Max";
+	if([platform isEqualToString:@"iPhone17,3"])return@"iPhone 16";
+	if([platform isEqualToString:@"iPhone17,4"])return@"iPhone 16 Plus";
+	if([platform isEqualToString:@"iPhone17,1"])return@"iPhone 16 Pro";
+	if([platform isEqualToString:@"iPhone17,2"])return@"iPhone 16 Pro Max";
+	if([platform isEqualToString:@"iPhone17,5"])return@"iPhone 16e";
+	
+	//结束
+	if([platform isEqualToString:@"iPod1,1"])return@"iPod Touch 1G";
+	if([platform isEqualToString:@"iPod2,1"])return@"iPod Touch 2G";
+	if([platform isEqualToString:@"iPod3,1"])return@"iPod Touch 3G";
+	if([platform isEqualToString:@"iPod4,1"])return@"iPod Touch 4G";
+	if([platform isEqualToString:@"iPod5,1"])return@"iPod Touch 5G";
+	if([platform isEqualToString:@"iPad1,1"])return@"iPad 1G";
+	if([platform isEqualToString:@"iPad2,1"])return@"iPad 2";
+	if([platform isEqualToString:@"iPad2,2"])return@"iPad 2";
+	if([platform isEqualToString:@"iPad2,3"])return@"iPad 2";
+	if([platform isEqualToString:@"iPad2,4"])return@"iPad 2";
+	if([platform isEqualToString:@"iPad2,5"])return@"iPad Mini 1G";
+	if([platform isEqualToString:@"iPad2,6"])return@"iPad Mini 1G";
+	if([platform isEqualToString:@"iPad2,7"])return@"iPad Mini 1G";
+	if([platform isEqualToString:@"iPad3,1"])return@"iPad 3";
+	if([platform isEqualToString:@"iPad3,2"])return@"iPad 3";
+	if([platform isEqualToString:@"iPad3,3"])return@"iPad 3";
+	if([platform isEqualToString:@"iPad3,4"])return@"iPad 4";
+	if([platform isEqualToString:@"iPad3,5"])return@"iPad 4";
+	if([platform isEqualToString:@"iPad3,6"])return@"iPad 4";
+	if([platform isEqualToString:@"iPad4,1"])return@"iPad Air";
+	if([platform isEqualToString:@"iPad4,2"])return@"iPad Air";
+	if([platform isEqualToString:@"iPad4,3"])return@"iPad Air";
+	if([platform isEqualToString:@"iPad4,4"])return@"iPad Mini 2G";
+	if([platform isEqualToString:@"iPad4,5"])return@"iPad Mini 2G";
+	if([platform isEqualToString:@"iPad4,6"])return@"iPad Mini 2G";
+	if([platform isEqualToString:@"iPad4,7"])return@"iPad Mini 3";
+	if([platform isEqualToString:@"iPad4,8"])return@"iPad Mini 3";
+	if([platform isEqualToString:@"iPad4,9"])return@"iPad Mini 3";
+	if([platform isEqualToString:@"iPad5,1"])return@"iPad Mini 4";
+	if([platform isEqualToString:@"iPad5,2"])return@"iPad Mini 4";
+	if([platform isEqualToString:@"iPad5,3"])return@"iPad Air 2";
+	if([platform isEqualToString:@"iPad5,4"])return@"iPad Air 2";
+	if([platform isEqualToString:@"iPad6,3"])return@"iPad Pro 9.7";
+	if([platform isEqualToString:@"iPad6,4"])return@"iPad Pro 9.7";
+	if([platform isEqualToString:@"iPad6,7"])return@"iPad Pro 12.9";
+	if([platform isEqualToString:@"iPad6,8"])return@"iPad Pro 12.9";
+	if([platform isEqualToString:@"i386"])return@"iPhone Simulator";
+	if([platform isEqualToString:@"x86_64"])return@"iPhone Simulator";
+	return platform;
+}
+
 @end
