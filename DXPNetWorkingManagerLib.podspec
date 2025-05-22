@@ -16,7 +16,7 @@ Pod::Spec.new do |spec|
   #
 
   spec.name         = "DXPNetWorkingManagerLib"
-  spec.version      = "1.0.13"
+  spec.version      = "1.0.14"
   spec.summary      = "DXP NetWork"
 
   # This description is used to generate tags and improve search results.
@@ -78,7 +78,7 @@ Pod::Spec.new do |spec|
   #  Supports git, hg, bzr, svn and HTTP.
   #
 
-  spec.source       = { :git => "https://github.com/HelloGitHub123/DXPNetWorkingManagerLib.git", :tag => "1.0.13" }
+  spec.source       = { :git => "https://github.com/HelloGitHub123/DXPNetWorkingManagerLib.git", :tag => "1.0.14" }
 
 
   # ――― Source Code ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
