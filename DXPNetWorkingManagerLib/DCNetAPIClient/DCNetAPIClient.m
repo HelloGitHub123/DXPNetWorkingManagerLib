@@ -14,6 +14,7 @@
 #import <DXPToolsLib/HJMBProgressHUD.h>
 #import <DXPToolsLib/HJMBProgressHUD+Category.h>
 #import <sys/utsname.h>
+#import "TokenManager.h"
 
 @interface DCNetAPIClient ()
 
@@ -34,33 +35,33 @@ static DCNetAPIClient *_sharedUcClient = nil;
 static dispatch_once_t onceTokenForUC;
 
 + (void)destroySharedClient {
-    _sharedClient = nil;
-    _sharedMockClient = nil;
-    _sharedUcClient = nil;
-    onceToken = 0l;
-    onceTokenForMock = 0l;
-    onceTokenForUC = 0l;
+	_sharedClient = nil;
+	_sharedMockClient = nil;
+	_sharedUcClient = nil;
+	onceToken = 0l;
+	onceTokenForMock = 0l;
+	onceTokenForUC = 0l;
 }
 
 + (DCNetAPIClient *)sharedClient {
-    dispatch_once(&onceToken, ^{
-        _sharedClient = [[DCNetAPIClient alloc] init];
-    });
-    return _sharedClient;
+	dispatch_once(&onceToken, ^{
+		_sharedClient = [[DCNetAPIClient alloc] init];
+	});
+	return _sharedClient;
 }
 
 + (DCNetAPIClient *)sharedMockClient {
-    dispatch_once(&onceTokenForMock, ^{
-        _sharedMockClient = [[DCNetAPIClient alloc] init];
-    });
-    return _sharedMockClient;
+	dispatch_once(&onceTokenForMock, ^{
+		_sharedMockClient = [[DCNetAPIClient alloc] init];
+	});
+	return _sharedMockClient;
 }
 
 + (DCNetAPIClient *)sharedUcClient {
-    dispatch_once(&onceTokenForUC, ^{
-        _sharedUcClient = [[DCNetAPIClient alloc] init];
-    });
-    return _sharedUcClient;
+	dispatch_once(&onceTokenForUC, ^{
+		_sharedUcClient = [[DCNetAPIClient alloc] init];
+	});
+	return _sharedUcClient;
 }
 
 - (void)setToken:(NSString *)token {
@@ -68,40 +69,40 @@ static dispatch_once_t onceTokenForUC;
 }
 
 - (void)setBaseUrl:(NSString *)baseUrl{
-    _baseUrl = baseUrl;
-    [self initWithBaseURL:[NSURL URLWithString:baseUrl]];
+	_baseUrl = baseUrl;
+	[self initWithBaseURL:[NSURL URLWithString:baseUrl]];
 }
 
 - (void)setDcMD5SerectStr:(NSString *)dcMD5SerectStr{
-    _dcMD5SerectStr = dcMD5SerectStr;
+	_dcMD5SerectStr = dcMD5SerectStr;
 }
 
 - (void)initWithBaseURL:(NSURL *)url {
-    if (!self) {
-        return ;
-    }
+	if (!self) {
+		return ;
+	}
 	
 	self.inputParamDic = [NSMutableDictionary dictionary];
 	self.startTimeDic = [NSMutableDictionary dictionary];
 	
-    _httpManager = [[AFHTTPSessionManager alloc] initWithBaseURL:url];
-    self.httpManager.responseSerializer = [AFJSONResponseSerializer serializer];//[AFHTTPResponseSerializer serializer];
-//    ((AFJSONResponseSerializer *)self.httpManager.responseSerializer).removesKeysWithNullValues= YES;
-    self.httpManager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"application/json", @"text/plain", @"text/javascript", @"text/json", @"text/html",@"image/jpeg", @"image/png",@"image/jpg",@"application/octet-stream",@"application/pdf", nil];
-    self.httpManager.requestSerializer = [AFJSONRequestSerializer serializer];
-    [self.httpManager.requestSerializer setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
-    [self.httpManager.requestSerializer setValue:@"application/json" forHTTPHeaderField:@"Accept"];
-    [self.httpManager.requestSerializer setValue:url.absoluteString forHTTPHeaderField:@"Referer"];
-    self.httpManager.securityPolicy.allowInvalidCertificates = YES;
-    self.httpManager.securityPolicy.validatesDomainName = NO;
+	_httpManager = [[AFHTTPSessionManager alloc] initWithBaseURL:url];
+	self.httpManager.responseSerializer = [AFJSONResponseSerializer serializer];//[AFHTTPResponseSerializer serializer];
+	//    ((AFJSONResponseSerializer *)self.httpManager.responseSerializer).removesKeysWithNullValues= YES;
+	self.httpManager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"application/json", @"text/plain", @"text/javascript", @"text/json", @"text/html",@"image/jpeg", @"image/png",@"image/jpg",@"application/octet-stream",@"application/pdf", nil];
+	self.httpManager.requestSerializer = [AFJSONRequestSerializer serializer];
+	[self.httpManager.requestSerializer setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+	[self.httpManager.requestSerializer setValue:@"application/json" forHTTPHeaderField:@"Accept"];
+	[self.httpManager.requestSerializer setValue:url.absoluteString forHTTPHeaderField:@"Referer"];
+	self.httpManager.securityPolicy.allowInvalidCertificates = YES;
+	self.httpManager.securityPolicy.validatesDomainName = NO;
 }
 
 - (void)requestJsonDataWithPath:(NSString *)aPath
-                     withParams:(NSDictionary*)params
-                 withMethodType:(DCNetworkMethod)method
-                        elementPath:(NSString *)elementPath
-                       andBlock:(void (^)(id data, NSError *error))block {
-    [self requestJsonDataWithPath:aPath withParams:params withMethodType:method elementPath:elementPath autoShowError:YES andBlock:block];
+					 withParams:(NSDictionary*)params
+				 withMethodType:(DCNetworkMethod)method
+					elementPath:(NSString *)elementPath
+					   andBlock:(void (^)(id data, NSError *error))block {
+	[self requestJsonDataWithPath:aPath withParams:params withMethodType:method elementPath:elementPath autoShowError:YES andBlock:block];
 }
 
 - (void)requestJsonDataWithPath:(NSString *)aPath
@@ -109,7 +110,43 @@ static dispatch_once_t onceTokenForUC;
                  withMethodType:(DCNetworkMethod)method
                         elementPath:(NSString *)elementPath
                   autoShowError:(BOOL)autoShowError
+					   andBlock:(void (^)(id data, NSError *error))block {
+	
+	if (self.openOauthToken) {
+		[self requestOauthTokenWithPath:aPath withParams:params withMethodType:method elementPath:elementPath autoShowError:autoShowError andBlock:block];
+		return;
+	} else {
+		[self requestJsonDataWithPath:aPath withParams:params withMethodType:method elementPath:elementPath autoShowError:autoShowError openOauthToken:NO andBlock:block];
+	}
+}
+
+// 3层架构调用
+- (void)requestOauthTokenWithPath:(NSString *)aPath
+					   withParams:(NSDictionary*)params withMethodType:(DCNetworkMethod)method
+					  elementPath:(NSString *)elementPath
+					autoShowError:(BOOL)autoShowError
+						 andBlock:(void (^)(id data, NSError *error))block
+{
+	[[TokenManager sharedInstance] getTokenWithCompletion:^(NSString * _Nullable token, NSString *code, NSString *resultMsg , NSError * _Nullable error) {
+		if (dcIsEmptyString(token)) {
+			// 停止调用
+			
+		} else {
+			[self.httpManager.requestSerializer setValue:token forHTTPHeaderField:@"Authorization"];
+			// 继续调用
+			[self requestJsonDataWithPath:aPath withParams:params withMethodType:method elementPath:elementPath autoShowError:autoShowError openOauthToken:YES andBlock:block];
+		}
+	}];
+}
+
+- (void)requestJsonDataWithPath:(NSString *)aPath
+                     withParams:(NSDictionary*)params
+                 withMethodType:(DCNetworkMethod)method
+                        elementPath:(NSString *)elementPath
+                  autoShowError:(BOOL)autoShowError
+				 openOauthToken:(BOOL)openOauthToken
                        andBlock:(void (^)(id data, NSError *error))block {
+	
     if (!aPath || aPath.length <= 0) {
         return;
     }
