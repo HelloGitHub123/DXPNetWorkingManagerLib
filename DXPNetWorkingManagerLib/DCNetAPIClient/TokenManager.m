@@ -8,7 +8,7 @@
 #import "TokenManager.h"
 #import "DCNetAPIClient.h"
 
-@interface TokenManager ()
+@interface TokenManager ()<NSURLSessionDelegate>
 
 @property (nonatomic, strong) NSString *token;
 //@property (nonatomic, strong) NSDate *expiryDate;
@@ -45,6 +45,9 @@
   if (self) {
     _serialQueue = dispatch_queue_create("com.gomo.TokenManagerQueue", DISPATCH_QUEUE_SERIAL);
     _callbackBlocks = [NSMutableArray array];
+	  
+	  self.statusCode = @"";
+	  self.resultMsg = @"";
   }
   return self;
 }
@@ -155,7 +158,11 @@
 //  [request setHTTPBody:jsonDataAsData];
 
 
-  NSURLSession *session = [NSURLSession sharedSession];
+	NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration defaultSessionConfiguration];
+	NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfig delegate:self delegateQueue:nil];
+	
+	
+//  NSURLSession *session = [NSURLSession sharedSession];
 
   NSURLSessionDataTask *task = [session dataTaskWithRequest:request
                                           completionHandler:^(NSData * _Nullable data,
@@ -208,6 +215,16 @@
 
   self.currentTask = task;
   [task resume];
+}
+
+- (void)URLSession:(NSURLSession *)session didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential * _Nullable))completionHandler {
+	if ([challenge.protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust]) {
+		NSURLCredential *credential = [NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust];
+		completionHandler(NSURLSessionAuthChallengeUseCredential, credential);
+	} else {
+		// 其他认证方式处理
+		completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
+	}
 }
 
 @end
