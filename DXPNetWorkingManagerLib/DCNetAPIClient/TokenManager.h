@@ -13,7 +13,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (instancetype)sharedInstance;
 
-- (void)getTokenWithCompletion:(void(^)(NSString * _Nullable token, NSString *code, NSString *resultMsg , NSError * _Nullable error))completion;
+- (void)getTokenWithCompletion:(void(^)(NSString * _Nullable token, int code, NSString *resultMsg , NSError * _Nullable error))completion;
 @end
 
 NS_ASSUME_NONNULL_END

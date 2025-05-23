@@ -17,7 +17,7 @@
 
 @property (nonatomic, assign) int expiresIn; // 令牌有效期
 @property (nonatomic, copy) NSString *resultMsg;
-@property (nonatomic, copy) NSString *statusCode;
+@property (nonatomic, assign) int statusCode;
 
 // 当前请求的任务
 @property (nonatomic, strong) NSURLSessionDataTask *currentTask;
@@ -46,13 +46,13 @@
     _serialQueue = dispatch_queue_create("com.gomo.TokenManagerQueue", DISPATCH_QUEUE_SERIAL);
     _callbackBlocks = [NSMutableArray array];
 	  
-	  self.statusCode = @"";
+	  self.statusCode = -1;
 	  self.resultMsg = @"";
   }
   return self;
 }
 
-- (void)getTokenWithCompletion:(void(^)(NSString * _Nullable token, NSString *code, NSString *resultMsg , NSError * _Nullable error))completion {
+- (void)getTokenWithCompletion:(void(^)(NSString * _Nullable token, int code, NSString *resultMsg , NSError * _Nullable error))completion {
   dispatch_async(self.serialQueue, ^{
     // 先判断Token是否有效
 //    if (self.token && self.expiryDate && [self.expiryDate compare:[NSDate date]] == NSOrderedDescending) {
@@ -64,7 +64,7 @@
     if (self.token && (seconds <= time)) {
       // 有效，直接返回
       dispatch_async(dispatch_get_main_queue(), ^{
-        completion(self.token, @"200", @"",  nil);
+        completion(self.token, 200, @"",  nil);
       });
       return;
     }
@@ -181,7 +181,7 @@
           fetchedToken = access_token;
           self.expiresIn = [expires_in intValue]; // 令牌有效期
           self.token = fetchedToken;
-          self.statusCode = @"200";
+          self.statusCode = 200;
           // 记录时间
           NSTimeInterval timestamp = [[NSDate date] timeIntervalSince1970];
           NSInteger seconds = (NSInteger)timestamp; // 转换为整数秒
@@ -192,7 +192,7 @@
           // 失败
           self.token = @"";
           NSString *status = [json valueForKey:@"status"];
-          self.statusCode = status;
+			self.statusCode = [status intValue];
 //          if ([status isEqualToString:@"401"]) {
 //            [self fetchTokenFromServer];
 //          } else {
@@ -204,7 +204,7 @@
       // 请求结束，清空当前任务
       self.currentTask = nil;
       // 调用所有回调
-      for (void(^callback)(NSString *,NSString *,NSString *, NSError *) in self.callbackBlocks) {
+      for (void(^callback)(NSString *,int,NSString *, NSError *) in self.callbackBlocks) {
         dispatch_async(dispatch_get_main_queue(), ^{
           callback(fetchedToken, self.statusCode , self.resultMsg ,err);
         });

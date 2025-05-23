@@ -127,7 +127,7 @@ static dispatch_once_t onceTokenForUC;
 					autoShowError:(BOOL)autoShowError
 						 andBlock:(void (^)(id data, NSError *error))block
 {
-	[[TokenManager sharedInstance] getTokenWithCompletion:^(NSString * _Nullable token, NSString *code, NSString *resultMsg , NSError * _Nullable error) {
+	[[TokenManager sharedInstance] getTokenWithCompletion:^(NSString * _Nullable token, int code, NSString *resultMsg , NSError * _Nullable error) {
 		if (dcIsEmptyString(token)) {
 			// 停止调用
 //			[self requestJsonDataWithPath:aPath withParams:params withMethodType:method elementPath:elementPath autoShowError:autoShowError openOauthToken:YES andBlock:block];
