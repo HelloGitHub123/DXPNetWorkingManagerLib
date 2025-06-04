@@ -15,6 +15,7 @@
 #import <DXPToolsLib/HJMBProgressHUD+Category.h>
 #import <sys/utsname.h>
 #import "TokenManager.h"
+#import "DCNetAPITools.h"
 
 @interface DCNetAPIClient ()
 
@@ -150,6 +151,15 @@ static dispatch_once_t onceTokenForUC;
     if (!aPath || aPath.length <= 0) {
         return;
     }
+	
+	// 判断是否打开三层架构开关 proxyPathEnabled
+	if (self.proxyPathEnabled && [aPath containsString:@"/dxp/"]) {
+		// 打开 替换 aPath
+		aPath = [DCNetAPITools getProxyPathURLString:aPath];
+		NSLog(@"三层架构最新URL：%@",aPath);
+	} else {
+		// 关闭 不关心
+	}
 	
 	if ([aPath containsString:@"?"]) {
 		NSArray *aPathList = [aPath componentsSeparatedByString:@"?"];

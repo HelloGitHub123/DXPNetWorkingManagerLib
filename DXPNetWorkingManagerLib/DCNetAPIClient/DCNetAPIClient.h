@@ -34,13 +34,14 @@ typedef enum {
 @property (nonatomic, assign) BOOL useMptSignCode;
 
 @property (nonatomic, copy) NSString * clientKey;
-
 @property (nonatomic, copy) NSString * curTime;
 
 @property (nonatomic, assign) BOOL isAddNewDXPHeader; // 是否支持新的DXP接口请求头
 
 @property (nonatomic, copy) NSString *authorizationStr; // 3层架构authorization
 @property (nonatomic, assign) BOOL openOauthToken; // 3层架构开关。YES:开  NO:关 默认关
+@property (nonatomic, copy) NSString *apigeeHost; //  APIGEE host
+@property (nonatomic, assign) BOOL proxyPathEnabled; // 三层架构开关  1:打开  0:默认关闭
 
 // 返回token
 @property (nonatomic, copy) void (^respTokenBlock)(NSString *token);

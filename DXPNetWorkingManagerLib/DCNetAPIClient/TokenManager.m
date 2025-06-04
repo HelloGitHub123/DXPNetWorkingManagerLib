@@ -122,7 +122,7 @@
 }
 
 - (void)fetchTokenFromServer {
-  NSString *url = [NSString stringWithFormat:@"%@/api/sg/v2/oauth/token",[DCNetAPIClient sharedClient].baseUrl];
+  NSString *url = [NSString stringWithFormat:@"%@/api/sg/v2/oauth/token",[DCNetAPIClient sharedClient].apigeeHost];
 
   NSLog(@"url===:%@",url);
   NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:url]];
