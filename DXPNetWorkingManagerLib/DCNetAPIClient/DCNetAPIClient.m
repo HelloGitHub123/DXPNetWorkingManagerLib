@@ -133,7 +133,8 @@ static dispatch_once_t onceTokenForUC;
 			// 停止调用
 //			[self requestJsonDataWithPath:aPath withParams:params withMethodType:method elementPath:elementPath autoShowError:autoShowError openOauthToken:YES andBlock:block];
 		} else {
-			[self.httpManager.requestSerializer setValue:token forHTTPHeaderField:@"Authorization"];
+			NSString *str = [NSString stringWithFormat:@"Bearer %@",token];
+			[self.httpManager.requestSerializer setValue:str forHTTPHeaderField:@"authorization"];
 			// 继续调用
 			[self requestJsonDataWithPath:aPath withParams:params withMethodType:method elementPath:elementPath autoShowError:autoShowError openOauthToken:YES andBlock:block];
 		}
