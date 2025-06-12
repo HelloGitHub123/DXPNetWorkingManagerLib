@@ -7,6 +7,7 @@
 
 #import "TokenManager.h"
 #import "DCNetAPIClient.h"
+#import "DCNetworkHeader.h"
 
 @interface TokenManager ()<NSURLSessionDelegate>
 
@@ -197,7 +198,7 @@
 //            [self fetchTokenFromServer];
 //          } else {
           NSString *fault = [json valueForKey:@"fault"];
-          self.resultMsg = fault;
+			self.resultMsg = dcIsEmptyString(fault)?@"":fault;
 //          }
         }
       }
