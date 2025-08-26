@@ -185,6 +185,7 @@ static dispatch_once_t onceTokenForUC;
     [self.httpManager.requestSerializer setValue:@"USER" forHTTPHeaderField:@"user-role"];
     [self.httpManager.requestSerializer setValue:@"2" forHTTPHeaderField:@"terminal-Type"];
     [self.httpManager.requestSerializer setValue:[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"] forHTTPHeaderField:@"appVersion"];
+    [self.httpManager.requestSerializer setValue:[[NSUserDefaults standardUserDefaults] valueForKey:@"cx_language"] forHTTPHeaderField:@"locale"];
     if (!dcIsEmptyString([[NSUserDefaults standardUserDefaults] valueForKey:@"LastModified"])) {
         [self.httpManager.requestSerializer setValue:[[NSUserDefaults standardUserDefaults] valueForKey:@"LastModified"] forHTTPHeaderField:@"If-Modified-Since"];
     }
