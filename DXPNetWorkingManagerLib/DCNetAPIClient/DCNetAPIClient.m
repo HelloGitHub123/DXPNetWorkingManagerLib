@@ -716,13 +716,13 @@ static dispatch_once_t onceTokenForUC;
     }
     [HJMBProgressHUD hideLoading];
     
-	if (responses.statusCode == 401 || responses.statusCode == 304 || responses.statusCode == 502 || responses.statusCode == 593 || responses.statusCode == 504) {
+	if (responses.statusCode == 401 || responses.statusCode == 304 || responses.statusCode == 502 || responses.statusCode == 593 || responses.statusCode == 504 || responses.statusCode == 503) {
 		
 		if (responses.statusCode == 401) {
 			block(dic, error);
 			NSMutableDictionary * userInfo = [NSMutableDictionary new];
 			[userInfo setValue:@"" forKey:@"loginType"];
-		}
+        }
 		
 		if (self.respHTTPCodeBlock) {
 			self.respHTTPCodeBlock(responses.statusCode, error);
