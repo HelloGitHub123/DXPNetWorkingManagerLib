@@ -175,7 +175,7 @@ static dispatch_once_t onceTokenForUC;
     [DCNetAPIClient addHttpHeader:aPath];
     
     if ([aPath containsString:@"/online/zoloz/realId/initialize"] || [aPath containsString:@"/online/zoloz/realId/checkresult"]) {
-        self.httpManager.requestSerializer.timeoutInterval = 30;
+        self.httpManager.requestSerializer.timeoutInterval = 60;
     } else {
         self.httpManager.requestSerializer.timeoutInterval = 60;
     }
