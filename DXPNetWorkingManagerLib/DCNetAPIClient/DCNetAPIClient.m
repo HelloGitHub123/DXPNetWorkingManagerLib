@@ -98,15 +98,15 @@ static dispatch_once_t onceTokenForUC;
 	self.httpManager.securityPolicy.validatesDomainName = NO;
 }
 
-- (void)requestJsonDataWithPath:(NSString *)aPath
+- (NSURLSessionDataTask *)requestJsonDataWithPath:(NSString *)aPath
 					 withParams:(NSDictionary*)params
 				 withMethodType:(DCNetworkMethod)method
 					elementPath:(NSString *)elementPath
 					   andBlock:(void (^)(id data, NSError *error))block {
-	[self requestJsonDataWithPath:aPath withParams:params withMethodType:method elementPath:elementPath autoShowError:YES andBlock:block];
+	return [self requestJsonDataWithPath:aPath withParams:params withMethodType:method elementPath:elementPath autoShowError:YES andBlock:block];
 }
 
-- (void)requestJsonDataWithPath:(NSString *)aPath
+- (NSURLSessionDataTask *)requestJsonDataWithPath:(NSString *)aPath
                      withParams:(NSDictionary*)params
                  withMethodType:(DCNetworkMethod)method
                         elementPath:(NSString *)elementPath
@@ -114,20 +114,20 @@ static dispatch_once_t onceTokenForUC;
 					   andBlock:(void (^)(id data, NSError *error))block {
 	
 	if (self.openOauthToken) {
-		[self requestOauthTokenWithPath:aPath withParams:params withMethodType:method elementPath:elementPath autoShowError:autoShowError andBlock:block];
-		return;
+        return [self requestOauthTokenWithPath:aPath withParams:params withMethodType:method elementPath:elementPath autoShowError:autoShowError andBlock:block];
 	} else {
-		[self requestJsonDataWithPath:aPath withParams:params withMethodType:method elementPath:elementPath autoShowError:autoShowError openOauthToken:NO andBlock:block];
+		return [self requestJsonDataWithPath:aPath withParams:params withMethodType:method elementPath:elementPath autoShowError:autoShowError openOauthToken:NO andBlock:block];
 	}
 }
 
 // 3层架构调用
-- (void)requestOauthTokenWithPath:(NSString *)aPath
+- (NSURLSessionDataTask *)requestOauthTokenWithPath:(NSString *)aPath
 					   withParams:(NSDictionary*)params withMethodType:(DCNetworkMethod)method
 					  elementPath:(NSString *)elementPath
 					autoShowError:(BOOL)autoShowError
 						 andBlock:(void (^)(id data, NSError *error))block
 {
+    __block NSURLSessionDataTask *task = nil;
 	[[TokenManager sharedInstance] getTokenWithCompletion:^(NSString * _Nullable token, int code, NSString *resultMsg , NSError * _Nullable error) {
 		if (dcIsEmptyString(token)) {
 			// 停止调用
@@ -136,12 +136,13 @@ static dispatch_once_t onceTokenForUC;
 			NSString *str = [NSString stringWithFormat:@"Bearer %@",token];
 			[self.httpManager.requestSerializer setValue:str forHTTPHeaderField:@"authorization"];
 			// 继续调用
-			[self requestJsonDataWithPath:aPath withParams:params withMethodType:method elementPath:elementPath autoShowError:autoShowError openOauthToken:YES andBlock:block];
+			task = [self requestJsonDataWithPath:aPath withParams:params withMethodType:method elementPath:elementPath autoShowError:autoShowError openOauthToken:YES andBlock:block];
 		}
 	}];
+    return task;
 }
 
-- (void)requestJsonDataWithPath:(NSString *)aPath
+- (NSURLSessionDataTask *)requestJsonDataWithPath:(NSString *)aPath
                      withParams:(NSDictionary*)params
                  withMethodType:(DCNetworkMethod)method
                         elementPath:(NSString *)elementPath
@@ -150,7 +151,7 @@ static dispatch_once_t onceTokenForUC;
                        andBlock:(void (^)(id data, NSError *error))block {
 	
     if (!aPath || aPath.length <= 0) {
-        return;
+        return nil;
     }
 	
 	// 判断是否打开三层架构开关 proxyPathEnabled
@@ -270,7 +271,7 @@ static dispatch_once_t onceTokenForUC;
             [self.httpManager.requestSerializer setValue:authToken forHTTPHeaderField:@"signcode"];
             
             DDLog(@"\n===========request===========\n%@\n%@\n%@:\n%@", kDCNetworkMethodName[method], aPath, params,self.httpManager.requestSerializer.HTTPRequestHeaders);
-            [self.httpManager GET:aPathStr parameters:nil headers:nil progress:^(NSProgress * _Nonnull downloadProgress) {
+            return [self.httpManager GET:aPathStr parameters:nil headers:nil progress:^(NSProgress * _Nonnull downloadProgress) {
                 
             } success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
                 
@@ -359,7 +360,7 @@ static dispatch_once_t onceTokenForUC;
             
             DDLog(@"\n===========request===========\n%@\n%@\n%@:\n%@", kDCNetworkMethodName[method], aPath, params,self.httpManager.requestSerializer.HTTPRequestHeaders);
 
-            [self.httpManager POST:aPath parameters:params headers:nil progress:^(NSProgress * _Nonnull uploadProgress) {
+            return [self.httpManager POST:aPath parameters:params headers:nil progress:^(NSProgress * _Nonnull uploadProgress) {
                 
             } success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
                 DDLog(@"\n===========response===========\n%@:\n%@", aPath, responseObject);
@@ -376,10 +377,158 @@ static dispatch_once_t onceTokenForUC;
             }];
             break;
         }
-       
+        case Put:{
+            NSString * token = dcIsEmptyString([DCNetAPIClient sharedClient].token)?@"":[DCNetAPIClient sharedClient].token;
+            // 参数处理
+            NSString * codeSign = [self dictionaryToJson:params];
+            self.inputParamDic[aPath] = codeSign;
+            
+            NSRegularExpression *regular = [NSRegularExpression regularExpressionWithPattern:@"[^a-zA-Z0-9]" options:0 error:NULL];
+            codeSign = [regular stringByReplacingMatchesInString:codeSign options:0 range:NSMakeRange(0, [codeSign length]) withTemplate:@""];
+            codeSign = [codeSign stringByReplacingOccurrencesOfString:@"null" withString:@""];
+            // URL处理
+            NSString * authToken = @"";
+            if (self.useMptSignCode) {
+                NSString * apathNew = [aPath stringByReplacingOccurrencesOfString:@"/ecare/webs" withString:@""];
+                apathNew = [apathNew stringByReplacingOccurrencesOfString:@"ecare/webs" withString:@""];
+                apathNew = [apathNew stringByReplacingOccurrencesOfString:@"/promotion-rest-boot" withString:@""];
+                apathNew = [apathNew stringByReplacingOccurrencesOfString:@"/ecare" withString:@""];
+                NSString * md5str = [NSString stringWithFormat:@"%@%@%@%@",apathNew,codeSign,token,@"32BytesString"];
+                authToken = [md5str SHA256];
+            } else {
+                NSString * apathNew = [aPath stringByReplacingOccurrencesOfString:@"/ecare/" withString:@"/"];
+                if ([apathNew containsString:@"mccm-outerfront/dmc/"]) {
+                    NSTimeInterval interval = [[NSDate date] timeIntervalSince1970];
+                    long long totalMilliseconds = interval*1000 ;
+                    NSString *curTime = [[NSString alloc] initWithFormat:@"%lld", totalMilliseconds];
+                    token = [NSString stringWithFormat:@"%@%@",curTime,token];
+                }
+                apathNew = [apathNew stringByReplacingOccurrencesOfString:@"/mccm-outerfront/dmc/" withString:@"/"];
+                apathNew = [apathNew stringByReplacingOccurrencesOfString:@"mccm-outerfront/dmc/" withString:@"/"];
+                apathNew = [apathNew stringByReplacingOccurrencesOfString:@"ecare/" withString:@"/"];
+                
+                NSString *md5str = @"";
+                if ([aPath containsString:@"promotion-rest-boot"]) {
+                    NSArray *pathList = [apathNew componentsSeparatedByString:@"/promotion-rest-boot"];
+                    apathNew = pathList[1];
+                    
+                    if (self.isAddNewDXPHeader && [aPath containsString:@"dxp/"]) {
+                        [self addNewDXPHeader];
+                        
+                        md5str = [NSString stringWithFormat:@"%@%@%@%@%@%@",apathNew,codeSign, [DCNetAPIClient sharedClient].curTime, self.clientKey,token,@"32BytesString"];//GCP接口签名
+                        
+                    } else {
+                        md5str = [NSString stringWithFormat:@"%@%@%@%@",apathNew,codeSign,token,@"32BytesString"];//GCP接口签名
+                    }
+                    authToken = [md5str SHA256];
+                } else {
+                    
+                    if (self.isAddNewDXPHeader && [aPath containsString:@"dxp/"]) {
+                        
+                        [self addNewDXPHeader];
+                        
+                        md5str = [NSString stringWithFormat:@"%@%@%@%@%@%@",apathNew,codeSign, [DCNetAPIClient sharedClient].curTime, self.clientKey,token,@"32BytesString"];//GCP接口签名
+                        
+                    } else {
+                        md5str = [NSString stringWithFormat:@"%@%@%@%@",apathNew,codeSign,token,@"32BytesString"];//登录成功后获取token
+                    }
+                    
+                    authToken = [md5str SHA256];
+                }
+            }
+            return [self.httpManager PUT:aPath parameters:params headers:nil success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+                DDLog(@"\n===========response===========\n%@:\n%@", aPath, responseObject);
+                
+                id error = [self handleResponse:responseObject autoShowError:autoShowError];
+                if (error) {
+//                    block(nil, error);
+                    [self failRequestWithTask:task error:error block:block];
+                } else {
+                    [self successRequestWithTask:task res:responseObject block:block];
+                }
+            } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+                [self failRequestWithTask:task error:error block:block];
+            }];
+            break;
+        }
+        case Delete:{
+            NSString * token = dcIsEmptyString([DCNetAPIClient sharedClient].token)?@"":[DCNetAPIClient sharedClient].token;
+            // 参数处理
+            NSString * codeSign = [self dictionaryToJson:params];
+            self.inputParamDic[aPath] = codeSign;
+            
+            NSRegularExpression *regular = [NSRegularExpression regularExpressionWithPattern:@"[^a-zA-Z0-9]" options:0 error:NULL];
+            codeSign = [regular stringByReplacingMatchesInString:codeSign options:0 range:NSMakeRange(0, [codeSign length]) withTemplate:@""];
+            codeSign = [codeSign stringByReplacingOccurrencesOfString:@"null" withString:@""];
+            // URL处理
+            NSString * authToken = @"";
+            if (self.useMptSignCode) {
+                NSString * apathNew = [aPath stringByReplacingOccurrencesOfString:@"/ecare/webs" withString:@""];
+                apathNew = [apathNew stringByReplacingOccurrencesOfString:@"ecare/webs" withString:@""];
+                apathNew = [apathNew stringByReplacingOccurrencesOfString:@"/promotion-rest-boot" withString:@""];
+                apathNew = [apathNew stringByReplacingOccurrencesOfString:@"/ecare" withString:@""];
+                NSString * md5str = [NSString stringWithFormat:@"%@%@%@%@",apathNew,codeSign,token,@"32BytesString"];
+                authToken = [md5str SHA256];
+            } else {
+                NSString * apathNew = [aPath stringByReplacingOccurrencesOfString:@"/ecare/" withString:@"/"];
+                if ([apathNew containsString:@"mccm-outerfront/dmc/"]) {
+                    NSTimeInterval interval = [[NSDate date] timeIntervalSince1970];
+                    long long totalMilliseconds = interval*1000 ;
+                    NSString *curTime = [[NSString alloc] initWithFormat:@"%lld", totalMilliseconds];
+                    token = [NSString stringWithFormat:@"%@%@",curTime,token];
+                }
+                apathNew = [apathNew stringByReplacingOccurrencesOfString:@"/mccm-outerfront/dmc/" withString:@"/"];
+                apathNew = [apathNew stringByReplacingOccurrencesOfString:@"mccm-outerfront/dmc/" withString:@"/"];
+                apathNew = [apathNew stringByReplacingOccurrencesOfString:@"ecare/" withString:@"/"];
+                
+                NSString *md5str = @"";
+                if ([aPath containsString:@"promotion-rest-boot"]) {
+                    NSArray *pathList = [apathNew componentsSeparatedByString:@"/promotion-rest-boot"];
+                    apathNew = pathList[1];
+                    
+                    if (self.isAddNewDXPHeader && [aPath containsString:@"dxp/"]) {
+                        [self addNewDXPHeader];
+                        
+                        md5str = [NSString stringWithFormat:@"%@%@%@%@%@%@",apathNew,codeSign, [DCNetAPIClient sharedClient].curTime, self.clientKey,token,@"32BytesString"];//GCP接口签名
+                        
+                    } else {
+                        md5str = [NSString stringWithFormat:@"%@%@%@%@",apathNew,codeSign,token,@"32BytesString"];//GCP接口签名
+                    }
+                    authToken = [md5str SHA256];
+                } else {
+                    
+                    if (self.isAddNewDXPHeader && [aPath containsString:@"dxp/"]) {
+                        
+                        [self addNewDXPHeader];
+                        
+                        md5str = [NSString stringWithFormat:@"%@%@%@%@%@%@",apathNew,codeSign, [DCNetAPIClient sharedClient].curTime, self.clientKey,token,@"32BytesString"];//GCP接口签名
+                        
+                    } else {
+                        md5str = [NSString stringWithFormat:@"%@%@%@%@",apathNew,codeSign,token,@"32BytesString"];//登录成功后获取token
+                    }
+                    
+                    authToken = [md5str SHA256];
+                }
+            }
+            return [self.httpManager DELETE:aPath parameters:params headers:nil success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+                DDLog(@"\n===========response===========\n%@:\n%@", aPath, responseObject);
+                
+                id error = [self handleResponse:responseObject autoShowError:autoShowError];
+                if (error) {
+//                    block(nil, error);
+                    [self failRequestWithTask:task error:error block:block];
+                } else {
+                    [self successRequestWithTask:task res:responseObject block:block];
+                }
+            } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+                [self failRequestWithTask:task error:error block:block];
+            }];
+            break;
+        }
         default:
             break;
     }
+    return nil;
 }
 
 // DXP 
@@ -406,7 +555,7 @@ static dispatch_once_t onceTokenForUC;
 	
 }
 
-- (void)uploadImgWithPath:(NSString *)aPath
+- (NSURLSessionDataTask *)uploadImgWithPath:(NSString *)aPath
                      withImg:(UIImage*)uploadImage
                  withMethodType:(DCNetworkMethod)method
                         elementPath:(NSString *)elementPath
@@ -414,7 +563,7 @@ static dispatch_once_t onceTokenForUC;
                  andBlock:(void (^)(id data, NSError *error))block{
     
     if (!aPath || aPath.length <= 0) {
-        return;
+        return nil;
     }
 	
 	self.startTimeDic[aPath] = [NSDate date];
@@ -430,7 +579,7 @@ static dispatch_once_t onceTokenForUC;
         
     switch (method) {
         case PostImg:{
-            [self.httpManager POST:aPath parameters:nil headers:nil constructingBodyWithBlock:^(id<AFMultipartFormData>  _Nonnull formData) {
+            return [self.httpManager POST:aPath parameters:nil headers:nil constructingBodyWithBlock:^(id<AFMultipartFormData>  _Nonnull formData) {
                 NSData *imageData =UIImageJPEGRepresentation(uploadImage,0.1);
                 NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
 
@@ -459,28 +608,35 @@ static dispatch_once_t onceTokenForUC;
         default:
             break;
     }
-    
+    return nil;
 }
 
-- (void)GET:(NSString *)url paramaters:(NSDictionary *)paramaters CompleteBlock:(CompleteBlock)completeBlock {
-    [self requestJsonDataWithPath:url withParams:paramaters withMethodType:Get elementPath:@"" andBlock:completeBlock];
+- (NSURLSessionDataTask *)GET:(NSString *)url paramaters:(NSDictionary *)paramaters CompleteBlock:(CompleteBlock)completeBlock {
+    return [self requestJsonDataWithPath:url withParams:paramaters withMethodType:Get elementPath:@"" andBlock:completeBlock];
 }
 
-- (void)GET:(NSString *)url CompleteBlock:(CompleteBlock)completeBlock {
-    
-    [self requestJsonDataWithPath:url withParams:nil withMethodType:Get elementPath:@"" andBlock:completeBlock];
+- (NSURLSessionDataTask *)GET:(NSString *)url CompleteBlock:(CompleteBlock)completeBlock {
+    return [self requestJsonDataWithPath:url withParams:nil withMethodType:Get elementPath:@"" andBlock:completeBlock];
 }
 
-- (void)POST:(NSString *)url paramaters:(NSDictionary *)paramaters CompleteBlock:(CompleteBlock)completeBlock {
-    
-    [self requestJsonDataWithPath:url withParams:paramaters withMethodType:Post elementPath:@"" andBlock:completeBlock];
+- (NSURLSessionDataTask *)POST:(NSString *)url paramaters:(NSDictionary *)paramaters CompleteBlock:(CompleteBlock)completeBlock {
+    return [self requestJsonDataWithPath:url withParams:paramaters withMethodType:Post elementPath:@"" andBlock:completeBlock];
 }
 
-- (void)POST:(NSString *)url image:(UIImage *)img CompleteBlock:(CompleteBlock)completeBlock {
-    [self uploadImgWithPath:url withImg:img withMethodType:PostImg elementPath:@"" autoShowError:YES andBlock:completeBlock];
+- (NSURLSessionDataTask *)POST:(NSString *)url image:(UIImage *)img CompleteBlock:(CompleteBlock)completeBlock {
+    return [self uploadImgWithPath:url withImg:img withMethodType:PostImg elementPath:@"" autoShowError:YES andBlock:completeBlock];
 }
+
+- (NSURLSessionDataTask *)PUT:(NSString *)url paramaters:(NSDictionary *)paramaters CompleteBlock:(CompleteBlock)completeBlock {
+    return [self requestJsonDataWithPath:url withParams:paramaters withMethodType:Put elementPath:@"" andBlock:completeBlock];
+}
+
+- (NSURLSessionDataTask *)DELETE:(NSString *)url paramaters:(NSDictionary *)paramaters CompleteBlock:(CompleteBlock)completeBlock {
+    return [self requestJsonDataWithPath:url withParams:paramaters withMethodType:Delete elementPath:@"" andBlock:completeBlock];
+}
+
 //上传
-- (void)upload:(NSString *)url data:(NSData *)data name:(NSString *)name fileName:(NSString *)fileName CompleteBlock:(CompleteBlock)completeBlock {
+- (NSURLSessionDataTask *)upload:(NSString *)url data:(NSData *)data name:(NSString *)name fileName:(NSString *)fileName CompleteBlock:(CompleteBlock)completeBlock {
     NSTimeInterval interval = [[NSDate date] timeIntervalSince1970];
     long long totalMilliseconds = interval*1000 ;
     NSString *curTime = [[NSString alloc] initWithFormat:@"%lld", totalMilliseconds];
@@ -498,7 +654,7 @@ static dispatch_once_t onceTokenForUC;
     if ([fileName rangeOfString:@".doc"].location != NSNotFound)  mimeType = @"application/msword";
     if ([fileName rangeOfString:@".txt"].location != NSNotFound)  mimeType = @"text/plain";
 
-    [self.httpManager POST:url parameters:nil headers:nil constructingBodyWithBlock:^(id<AFMultipartFormData>  _Nonnull formData) {
+    return [self.httpManager POST:url parameters:nil headers:nil constructingBodyWithBlock:^(id<AFMultipartFormData>  _Nonnull formData) {
         [formData appendPartWithFileData:data name:name fileName:fileName mimeType:mimeType];
     } progress:^(NSProgress * _Nonnull uploadProgress) {
 
@@ -513,7 +669,7 @@ static dispatch_once_t onceTokenForUC;
 /**
  * method  取 POST或GET
  */
-- (void)downloadFile:(NSString *)urlStr method:(NSString *)method paramaters:(NSDictionary *)paramaters CompleteBlock:(CompleteBlock)completeBlock{
+- (NSURLSessionDownloadTask *)downloadFile:(NSString *)urlStr method:(NSString *)method paramaters:(NSDictionary *)paramaters CompleteBlock:(CompleteBlock)completeBlock{
 ///    1、创建网络下载对象
 
     AFURLSessionManager *manager = [[AFURLSessionManager alloc] initWithSessionConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
@@ -524,7 +680,7 @@ static dispatch_once_t onceTokenForUC;
     
     UIDevice *device = [UIDevice currentDevice];
     if([[device model] hasSuffix:@"Simulator"]){ //在模拟器不保存到文件中
-        return;
+        return nil;
     }
     
     //获取Document目录下的Log文件夹，若没有则新建
@@ -594,7 +750,7 @@ static dispatch_once_t onceTokenForUC;
 
     [downloadTask resume];
 
-    
+    return downloadTask;
 }
 
 /// eg: 文件下载
@@ -604,7 +760,7 @@ static dispatch_once_t onceTokenForUC;
 /// @param downloadName  下载目标目录名称
 /// @param fileName 文件名称
 /// @param completeBlock  回调
-- (void)downloadFile:(NSString *)downLoadURL method:(NSString *)method paramaters:(NSDictionary *)paramaters downloadName:(NSString *)downloadName fileName:(NSString *)fileName CompleteBlock:(CompleteBlock)completeBlock {
+- (NSURLSessionDownloadTask *)downloadFile:(NSString *)downLoadURL method:(NSString *)method paramaters:(NSDictionary *)paramaters downloadName:(NSString *)downloadName fileName:(NSString *)fileName CompleteBlock:(CompleteBlock)completeBlock {
 	
 	// 创建网络下载对象
 	AFURLSessionManager *manager = [[AFURLSessionManager alloc] initWithSessionConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
@@ -651,6 +807,7 @@ static dispatch_once_t onceTokenForUC;
 		}
 	}];
 	[downloadTask resume];
+    return downloadTask;
 }
 
 #pragma mark - 成功回调

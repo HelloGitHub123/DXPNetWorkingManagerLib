@@ -63,19 +63,19 @@ typedef enum {
 + (DCNetAPIClient *)sharedMockClient;
 + (DCNetAPIClient *)sharedUcClient;
 
-- (void)requestJsonDataWithPath:(NSString *)aPath
+- (NSURLSessionDataTask *)requestJsonDataWithPath:(NSString *)aPath
                      withParams:(NSDictionary*)params
                  withMethodType:(DCNetworkMethod)method
                         elementPath:(NSString *)elementPath
                        andBlock:(void (^)(id data, NSError *error))block;
-- (void)requestJsonDataWithPath:(NSString *)aPath
+- (NSURLSessionDataTask *)requestJsonDataWithPath:(NSString *)aPath
                      withParams:(NSDictionary*)params
                  withMethodType:(DCNetworkMethod)method
                         elementPath:(NSString *)elementPath
                   autoShowError:(BOOL)autoShowError
                        andBlock:(void (^)(id data, NSError *error))block;
 
-- (void)uploadImgWithPath:(NSString *)aPath
+- (NSURLSessionDataTask *)uploadImgWithPath:(NSString *)aPath
                      withImg:(UIImage*)image
                  withMethodType:(DCNetworkMethod)method
                         elementPath:(NSString *)elementPath
@@ -85,20 +85,25 @@ typedef enum {
 
 + (void)userAddRequestHeader:(NSString *)headerStr forHeadFieldName:(NSString *)headerFieldName;
 
-- (void)GET:(NSString *)url paramaters:(NSDictionary *)paramaters CompleteBlock:(CompleteBlock)completeBlock;
+- (NSURLSessionDataTask *)GET:(NSString *)url paramaters:(NSDictionary *)paramaters CompleteBlock:(CompleteBlock)completeBlock;
 
-- (void)GET:(NSString *)url CompleteBlock:(CompleteBlock)completeBlock;
+- (NSURLSessionDataTask *)GET:(NSString *)url CompleteBlock:(CompleteBlock)completeBlock;
 
-- (void)POST:(NSString *)url paramaters:(NSDictionary *)paramaters CompleteBlock:(CompleteBlock)completeBlock;
+- (NSURLSessionDataTask *)POST:(NSString *)url paramaters:(NSDictionary *)paramaters CompleteBlock:(CompleteBlock)completeBlock;
 
-- (void)POST:(NSString *)url image:(UIImage *)img CompleteBlock:(CompleteBlock)completeBlock;
+- (NSURLSessionDataTask *)POST:(NSString *)url image:(UIImage *)img CompleteBlock:(CompleteBlock)completeBlock;
+
+- (NSURLSessionDataTask *)PUT:(NSString *)url paramaters:(NSDictionary *)paramaters CompleteBlock:(CompleteBlock)completeBlock;
+
+- (NSURLSessionDataTask *)DELETE:(NSString *)url paramaters:(NSDictionary *)paramaters CompleteBlock:(CompleteBlock)completeBlock;
+
 ///上传文件
-- (void)upload:(NSString *)url data:(NSData *)data name:(NSString *)name fileName:(NSString *)fileName CompleteBlock:(CompleteBlock)completeBlock;
+- (NSURLSessionDataTask *)upload:(NSString *)url data:(NSData *)data name:(NSString *)name fileName:(NSString *)fileName CompleteBlock:(CompleteBlock)completeBlock;
 ///下载文件
 /**
  * method  取 POST或GET
  */
-- (void)downloadFile:(NSString *)urlStr method:(NSString *)method paramaters:(NSDictionary *)paramaters CompleteBlock:(CompleteBlock)completeBlock;
+- (NSURLSessionDownloadTask *)downloadFile:(NSString *)urlStr method:(NSString *)method paramaters:(NSDictionary *)paramaters CompleteBlock:(CompleteBlock)completeBlock;
 
 
 /// eg: 文件下载
@@ -108,6 +113,6 @@ typedef enum {
 /// @param downloadName  下载目标目录名称
 /// @param fileName 文件名称
 /// @param completeBlock  回调
-- (void)downloadFile:(NSString *)downLoadURL method:(NSString *)method paramaters:(NSDictionary *)paramaters downloadName:(NSString *)downloadName fileName:(NSString *)fileName CompleteBlock:(CompleteBlock)completeBlock;
+- (NSURLSessionDownloadTask *)downloadFile:(NSString *)downLoadURL method:(NSString *)method paramaters:(NSDictionary *)paramaters downloadName:(NSString *)downloadName fileName:(NSString *)fileName CompleteBlock:(CompleteBlock)completeBlock;
 
 @end
