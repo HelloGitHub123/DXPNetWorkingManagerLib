@@ -190,6 +190,11 @@ static dispatch_once_t onceTokenForUC;
     if (!dcIsEmptyString([[NSUserDefaults standardUserDefaults] valueForKey:@"LastModified"])) {
         [self.httpManager.requestSerializer setValue:[[NSUserDefaults standardUserDefaults] valueForKey:@"LastModified"] forHTTPHeaderField:@"If-Modified-Since"];
     }
+	
+	if (dcIsEmptyString([[NSUserDefaults standardUserDefaults] valueForKey:@"LanguageCurrentVersion"])) {
+		[self.httpManager.requestSerializer setValue:nil forHTTPHeaderField:@"If-Modified-Since"];
+	}
+	
     if ([aPath containsString:@"/property/cx/property.json"] || ([aPath containsString:@"/i18n/app"] && [aPath containsString:@"/local.json"])) {
         self.httpManager.requestSerializer.cachePolicy = NSURLRequestReloadIgnoringLocalCacheData;
     } else {
@@ -843,6 +848,7 @@ static dispatch_once_t onceTokenForUC;
         //说明国际化有要更新的内容
         NSString *strLastModified = [responses.allHeaderFields objectForKey:@"Last-Modified"];
         [[NSUserDefaults standardUserDefaults] setValue:dcObjectOrEmptyStr(strLastModified) forKey:@"LastModified"];
+		[[NSUserDefaults standardUserDefaults] setObject:@"1.4.23" forKey:@"LanguageCurrentVersion"];
         block(res, nil);
     } else {
 //        if ([DCIsNull([res objectForKey:@"code"])?@"":[res objectForKey:@"code"] isEqualToString:@"500"]) {
