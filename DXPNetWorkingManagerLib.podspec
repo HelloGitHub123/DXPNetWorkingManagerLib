@@ -16,7 +16,7 @@ Pod::Spec.new do |spec|
   #
 
   spec.name         = "DXPNetWorkingManagerLib"
-  spec.version      = "1.1.29"
+  spec.version      = "1.1.30"
   spec.summary      = "DXP NetWork"
 
   # This description is used to generate tags and improve search results.
@@ -78,7 +78,7 @@ Pod::Spec.new do |spec|
   #  Supports git, hg, bzr, svn and HTTP.
   #
 
-  spec.source       = { :git => "https://github.com/HelloGitHub123/DXPNetWorkingManagerLib.git", :tag => "1.1.29" }
+  spec.source       = { :git => "https://github.com/HelloGitHub123/DXPNetWorkingManagerLib.git", :tag => "1.1.30" }
 
 
   # ――― Source Code ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
@@ -120,7 +120,7 @@ Pod::Spec.new do |spec|
 
 spec.dependency 'AFNetworking', '~> 4.0.1'
     spec.dependency 'DXPToolsLib'
-    spec.dependencies 'MJExtension'
+    spec.dependency 'MJExtension'
 
   # spec.library   = "iconv"
   # spec.libraries = "iconv", "xml2"
