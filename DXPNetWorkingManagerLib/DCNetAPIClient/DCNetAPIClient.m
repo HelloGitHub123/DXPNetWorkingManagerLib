@@ -1028,6 +1028,13 @@ static dispatch_once_t onceTokenForUC;
 //    [self.requestSerializer setValue:kVersion_Coding forHTTPHeaderField:@"Terminal-Version"];
 //    [self.requestSerializer setValue:Single_Token forHTTPHeaderField:@"Token"];
     [[self sharedClient].httpManager.requestSerializer setValue:[[NSUserDefaults standardUserDefaults] valueForKey:@"cx_language"] forHTTPHeaderField:@"locale"];
+	
+	if ([url containsString:@"/dxp/user-management/v1/device/biometric"] || [url containsString:@"/dxp/user-management/v1/device/report"]) {
+		//先用在header里面有Device-Id，后期不知道为啥被注释了，但是dxp接口需要这个
+		NSString *deviceId =  [[NSUserDefaults standardUserDefaults] valueForKey:@"deviceId"];
+		[[self sharedClient].httpManager.requestSerializer setValue:deviceId forHTTPHeaderField:@"Device-Id"];
+		[[self sharedClient].httpManager.requestSerializer setValue:@"appCode" forHTTPHeaderField:@"X-Client-Key"];
+	}
     
 }
 
