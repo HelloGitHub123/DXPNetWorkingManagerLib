@@ -6,7 +6,6 @@
 //
 
 #import "DCBaseReqParasModel.h"
-#import <MJExtension/MJExtension.h>
 
 @implementation DCBaseReqParasModel
 

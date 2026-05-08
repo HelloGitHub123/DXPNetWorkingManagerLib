@@ -7,6 +7,7 @@
 
 #import <Foundation/Foundation.h>
 #import <objc/runtime.h>
+#import <MJExtension/MJExtension.h>
 
 @class DCBaseReqParasModel;
 @class DCBaseReqApi;
