@@ -23,25 +23,26 @@ typedef enum {
 } DCNetworkMethod;
 
 @interface DCNetAPIClient : NSObject
-@property (nonatomic, strong) AFHTTPSessionManager * httpManager;
 
-@property (nonatomic, copy) NSString * baseUrl;
-
-@property (nonatomic, copy) NSString * token;
-
-@property (nonatomic, copy) NSString * dcMD5SerectStr;
-
+@property (nonatomic, strong) AFHTTPSessionManager *httpManager;
+@property (nonatomic, copy) NSString *baseUrl;
+@property (nonatomic, copy) NSString *token;
+@property (nonatomic, copy) NSString *dcMD5SerectStr;
 @property (nonatomic, assign) BOOL useMptSignCode;
-
-@property (nonatomic, copy) NSString * clientKey;
-@property (nonatomic, copy) NSString * curTime;
-
+@property (nonatomic, copy) NSString *clientKey;
+@property (nonatomic, copy) NSString *curTime;
+@property (nonatomic, copy) NSString *tempCurTime;//如果设置了tempCurTime,那么直接赋给curTime，然后置空tempCurTime
 @property (nonatomic, assign) BOOL isAddNewDXPHeader; // 是否支持新的DXP接口请求头
-
 @property (nonatomic, copy) NSString *authorizationStr; // 3层架构authorization
 @property (nonatomic, assign) BOOL openOauthToken; // 3层架构开关。YES:开  NO:关 默认关
 @property (nonatomic, copy) NSString *apigeeHost; //  APIGEE host
 @property (nonatomic, assign) BOOL proxyPathEnabled; // 三层架构开关  1:打开  0:默认关闭
+
+@property (nonatomic, assign) BOOL newSignCodeModel;//启动新的sigeCode模式
+@property (nonatomic, copy) NSString *projectCode;
+@property (nonatomic, copy) NSString *dynamicSalt;
+@property (nonatomic, copy) NSString *sessionSecret;
+@property (nonatomic, copy) NSString *expiresAt;
 
 // 返回token
 @property (nonatomic, copy) void (^respTokenBlock)(NSString *token);
@@ -75,12 +76,6 @@ typedef enum {
                   autoShowError:(BOOL)autoShowError
                        andBlock:(void (^)(id data, NSError *error))block;
 
-- (NSURLSessionDataTask *)uploadImgWithPath:(NSString *)aPath
-                     withImg:(UIImage*)image
-                 withMethodType:(DCNetworkMethod)method
-                        elementPath:(NSString *)elementPath
-                  autoShowError:(BOOL)autoShowError
-                       andBlock:(void (^)(id data, NSError *error))block;
 + (void)destroySharedClient;
 
 + (void)userAddRequestHeader:(NSString *)headerStr forHeadFieldName:(NSString *)headerFieldName;
@@ -97,22 +92,13 @@ typedef enum {
 
 - (NSURLSessionDataTask *)DELETE:(NSString *)url paramaters:(NSDictionary *)paramaters CompleteBlock:(CompleteBlock)completeBlock;
 
-///上传文件
 - (NSURLSessionDataTask *)upload:(NSString *)url data:(NSData *)data name:(NSString *)name fileName:(NSString *)fileName CompleteBlock:(CompleteBlock)completeBlock;
-///下载文件
+
 /**
  * method  取 POST或GET
  */
 - (NSURLSessionDownloadTask *)downloadFile:(NSString *)urlStr method:(NSString *)method paramaters:(NSDictionary *)paramaters CompleteBlock:(CompleteBlock)completeBlock;
 
-
-/// eg: 文件下载
-/// @param downLoadURL  下载链接
-/// @param method  方式 Post 、Get
-/// @param paramaters  参数
-/// @param downloadName  下载目标目录名称
-/// @param fileName 文件名称
-/// @param completeBlock  回调
 - (NSURLSessionDownloadTask *)downloadFile:(NSString *)downLoadURL method:(NSString *)method paramaters:(NSDictionary *)paramaters downloadName:(NSString *)downloadName fileName:(NSString *)fileName CompleteBlock:(CompleteBlock)completeBlock;
 
 @end
