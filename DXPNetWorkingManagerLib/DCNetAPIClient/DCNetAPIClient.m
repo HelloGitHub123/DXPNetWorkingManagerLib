@@ -644,11 +644,16 @@ static dispatch_once_t onceTokenForUC;
     [self.httpManager.requestSerializer setValue:@"ios" forHTTPHeaderField:@"Device-Type"];
     [self.httpManager.requestSerializer setValue:[[NSUserDefaults standardUserDefaults] valueForKey:@"cx_language"] forHTTPHeaderField:@"locale"];
 
-    NSString *mimeType = @"image/jpeg";
+    NSString *mimeType = @"*/*";
     if ([fileName rangeOfString:@".pdf"].location != NSNotFound)  mimeType = @"application/pdf";
     if ([fileName rangeOfString:@".docx"].location != NSNotFound)  mimeType = @"application/vnd.openxmlformats-officedocument.wordprocessingml.document";
     if ([fileName rangeOfString:@".doc"].location != NSNotFound)  mimeType = @"application/msword";
     if ([fileName rangeOfString:@".txt"].location != NSNotFound)  mimeType = @"text/plain";
+    if ([fileName rangeOfString:@".png"].location != NSNotFound)  mimeType = @"image/png";
+    if ([fileName rangeOfString:@".jpg"].location != NSNotFound ||
+        [fileName rangeOfString:@".jpeg"].location != NSNotFound ||
+        [fileName rangeOfString:@".jpe"].location != NSNotFound)  mimeType = @"image/jpeg";
+    if ([fileName rangeOfString:@".gif"].location != NSNotFound)  mimeType = @"image/gif";
 
     return [self.httpManager POST:url parameters:nil headers:nil constructingBodyWithBlock:^(id<AFMultipartFormData>  _Nonnull formData) {
         [formData appendPartWithFileData:data name:name fileName:fileName mimeType:mimeType];
