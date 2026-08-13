@@ -894,8 +894,8 @@ static dispatch_once_t onceTokenForUC;
         [[self sharedMockClient].httpManager.requestSerializer setValue:deviceId forHTTPHeaderField:@"Device-Id"];
 
         NSString *key = @"appCode";
-        if (!dcIsEmptyString([DCNetAPIClient sharedClient].xClientKey)) {
-            key = [DCNetAPIClient sharedClient].xClientKey;
+        if (!dcIsEmptyString([DCNetAPIClient sharedClient].XClientKey)) {
+            key = [DCNetAPIClient sharedClient].XClientKey;
         }
         [[self sharedClient].httpManager.requestSerializer setValue:key forHTTPHeaderField:@"X-Client-Key"];
         [[self sharedUcClient].httpManager.requestSerializer setValue:key forHTTPHeaderField:@"X-Client-Key"];
