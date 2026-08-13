@@ -31,6 +31,7 @@ typedef enum {
 @property (nonatomic, assign) BOOL useMptSignCode;
 @property (nonatomic, copy) NSString *clientKey;
 @property (nonatomic, copy) NSString *curTime;
+@property (nonatomic, copy) NSString *XClientKey;//请求头X-Client-Key
 @property (nonatomic, copy) NSString *tempCurTime;//如果设置了tempCurTime,那么直接赋给curTime，然后置空tempCurTime
 @property (nonatomic, assign) BOOL isAddNewDXPHeader; // 是否支持新的DXP接口请求头
 @property (nonatomic, copy) NSString *authorizationStr; // 3层架构authorization

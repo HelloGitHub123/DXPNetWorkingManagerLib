@@ -893,10 +893,14 @@ static dispatch_once_t onceTokenForUC;
         [[self sharedUcClient].httpManager.requestSerializer setValue:deviceId forHTTPHeaderField:@"Device-Id"];
         [[self sharedMockClient].httpManager.requestSerializer setValue:deviceId forHTTPHeaderField:@"Device-Id"];
 
-		[[self sharedClient].httpManager.requestSerializer setValue:@"appCode" forHTTPHeaderField:@"X-Client-Key"];
-        [[self sharedUcClient].httpManager.requestSerializer setValue:@"appCode" forHTTPHeaderField:@"X-Client-Key"];
-        [[self sharedMockClient].httpManager.requestSerializer setValue:@"appCode" forHTTPHeaderField:@"X-Client-Key"];
-	}
+        NSString *key = @"appCode";
+        if (!dcIsEmptyString([DCNetAPIClient sharedClient].xClientKey)) {
+            key = [DCNetAPIClient sharedClient].xClientKey;
+        }
+        [[self sharedClient].httpManager.requestSerializer setValue:key forHTTPHeaderField:@"X-Client-Key"];
+        [[self sharedUcClient].httpManager.requestSerializer setValue:key forHTTPHeaderField:@"X-Client-Key"];
+        [[self sharedMockClient].httpManager.requestSerializer setValue:key forHTTPHeaderField:@"X-Client-Key"];
+    }
     
     if ([self sharedClient].newSignCodeModel) {
         [[self sharedClient].httpManager.requestSerializer setValue:@"2.0" forHTTPHeaderField:@"X-Sign-Version"];
