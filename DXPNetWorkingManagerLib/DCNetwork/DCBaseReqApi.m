@@ -244,15 +244,20 @@ static DCReqPlaceholderApi *_placeholderApi = nil;
     if (detailResDataBlock) {
         detailResDataBlock(resDic, error);
     }
+    BOOL requestSuccess = NO;
     if (!error) {
-        NSString *code = [resDic objectForKey:kDCBaseReqApiResResultCode];
-        if ((!dcNetWk_isEmptyString(code) && [code isEqualToString:kDCBaseReqApiResResultCode200]) || ([self respondsToSelector:@selector(requestJudge:)] && [self requestJudge:resDic])) {
-            [self doDelegateSuccessMethod];
-            [self callSyncNextBlock:self.successThenRequest];
+        if ([self respondsToSelector:@selector(requestJudge:)]) {
+            // 实现了requestJudge方法，以这个方法为准
+            requestSuccess = [self requestJudge:resDic];
         } else {
-            [self doDelegateFailMethod];
-            [self callSyncNextBlock:self.failThenRequest];
+            // 默认判断
+            NSString *code = [resDic objectForKey:kDCBaseReqApiResResultCode];
+            requestSuccess = !dcNetWk_isEmptyString(code) && [code isEqualToString:kDCBaseReqApiResResultCode200];
         }
+    }
+    if (requestSuccess) {
+        [self doDelegateSuccessMethod];
+        [self callSyncNextBlock:self.successThenRequest];
     } else {
         [self doDelegateFailMethod];
         [self callSyncNextBlock:self.failThenRequest];
