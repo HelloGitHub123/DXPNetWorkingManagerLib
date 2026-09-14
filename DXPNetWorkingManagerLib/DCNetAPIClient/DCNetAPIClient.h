@@ -13,6 +13,10 @@
 typedef void(^SuccessBlock)(id res);
 typedef void(^FailureBlock)(NSError *error);
 typedef void(^CompleteBlock)(id res, NSError *error);
+typedef void(^DCNetworkRequestCompletionHandler)(NSURLRequest * _Nullable request,
+                                                 NSURLResponse * _Nullable response,
+                                                 id _Nullable responseObject,
+                                                 NSError * _Nullable error);
 
 typedef enum {
     Get = 0,
@@ -64,6 +68,10 @@ typedef enum {
 + (DCNetAPIClient *)sharedClient;
 + (DCNetAPIClient *)sharedMockClient;
 + (DCNetAPIClient *)sharedUcClient;
+
+/// Observes completed requests made by DCNetAPIClient. The receiver is
+/// responsible for filtering, redaction, serialization, and persistence.
++ (void)setNetworkRequestCompletionHandler:(DCNetworkRequestCompletionHandler _Nullable)handler;
 
 - (NSURLSessionDataTask *)requestJsonDataWithPath:(NSString *)aPath
                      withParams:(NSDictionary*)params

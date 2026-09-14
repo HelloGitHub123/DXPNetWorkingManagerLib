@@ -17,6 +17,32 @@
 #import "TokenManager.h"
 #import "DCNetAPITools.h"
 
+static DCNetworkRequestCompletionHandler DCNetworkRequestCompletion = nil;
+
+static void DCNotifyNetworkRequest(NSURLRequest *request,
+                                   NSURLResponse *response,
+                                   id responseObject,
+                                   NSError *error) {
+    DCNetworkRequestCompletionHandler handler = nil;
+    @synchronized ([DCNetAPIClient class]) {
+        handler = [DCNetworkRequestCompletion copy];
+    }
+    if (!handler || (!request && !response)) {
+        return;
+    }
+    @try {
+        handler(request, response, responseObject, error);
+    } @catch (__unused NSException *exception) {
+    }
+}
+
+static void DCNotifyNetworkTask(NSURLSessionTask *task, id responseObject, NSError *error) {
+    DCNotifyNetworkRequest(task.originalRequest ?: task.currentRequest,
+                           task.response,
+                           responseObject,
+                           error);
+}
+
 @interface DCNetAPIClient ()
 
 @property (nonatomic, strong) NSMutableDictionary *inputParamDic;
@@ -64,6 +90,12 @@ static dispatch_once_t onceTokenForUC;
 		_sharedUcClient = [[DCNetAPIClient alloc] init];
 	});
 	return _sharedUcClient;
+}
+
++ (void)setNetworkRequestCompletionHandler:(DCNetworkRequestCompletionHandler)handler {
+    @synchronized ([DCNetAPIClient class]) {
+        DCNetworkRequestCompletion = [handler copy];
+    }
 }
 
 - (void)setToken:(NSString *)token {
@@ -285,6 +317,7 @@ static dispatch_once_t onceTokenForUC;
             return [self.httpManager GET:aPathStr parameters:nil headers:nil progress:^(NSProgress * _Nonnull downloadProgress) {
                 
             } success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+                DCNotifyNetworkTask(task, responseObject, nil);
                 if (![aPathStr containsString:@"common/file/acquire"]) {
                     DDLog(@"\n===========response===========\n%@ \n%@", aPath, responseObject);
                 }
@@ -295,6 +328,7 @@ static dispatch_once_t onceTokenForUC;
                     [self successRequestWithTask:task res:responseObject block:block];
                 }
             } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+                DCNotifyNetworkTask(task, nil, error);
                 DDLog(@"\n===========response===========\n%@:", aPath);
                 [self failRequestWithTask:task error:error block:block];
             }];
@@ -378,6 +412,7 @@ static dispatch_once_t onceTokenForUC;
             return [self.httpManager POST:aPath parameters:params headers:nil progress:^(NSProgress * _Nonnull uploadProgress) {
                 
             } success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+                DCNotifyNetworkTask(task, responseObject, nil);
                 DDLog(@"\n===========response===========\n%@:\n%@", aPath, responseObject);
                 
                 id error = [self handleResponse:responseObject autoShowError:autoShowError];
@@ -388,6 +423,7 @@ static dispatch_once_t onceTokenForUC;
                     [self successRequestWithTask:task res:responseObject block:block];
                 }
             } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+                DCNotifyNetworkTask(task, nil, error);
                 [self failRequestWithTask:task error:error block:block];
             }];
             break;
@@ -461,6 +497,7 @@ static dispatch_once_t onceTokenForUC;
                 }
             }
             return [self.httpManager PUT:aPath parameters:params headers:nil success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+                DCNotifyNetworkTask(task, responseObject, nil);
                 DDLog(@"\n===========response===========\n%@:\n%@", aPath, responseObject);
                 
                 id error = [self handleResponse:responseObject autoShowError:autoShowError];
@@ -471,6 +508,7 @@ static dispatch_once_t onceTokenForUC;
                     [self successRequestWithTask:task res:responseObject block:block];
                 }
             } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+                DCNotifyNetworkTask(task, nil, error);
                 [self failRequestWithTask:task error:error block:block];
             }];
             break;
@@ -544,6 +582,7 @@ static dispatch_once_t onceTokenForUC;
                 }
             }
             return [self.httpManager DELETE:aPath parameters:params headers:nil success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+                DCNotifyNetworkTask(task, responseObject, nil);
                 DDLog(@"\n===========response===========\n%@:\n%@", aPath, responseObject);
                 
                 id error = [self handleResponse:responseObject autoShowError:autoShowError];
@@ -554,6 +593,7 @@ static dispatch_once_t onceTokenForUC;
                     [self successRequestWithTask:task res:responseObject block:block];
                 }
             } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+                DCNotifyNetworkTask(task, nil, error);
                 [self failRequestWithTask:task error:error block:block];
             }];
             break;
@@ -620,6 +660,7 @@ static dispatch_once_t onceTokenForUC;
             } progress:^(NSProgress * _Nonnull uploadProgress) {
                 
             } success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+                DCNotifyNetworkTask(task, responseObject, nil);
                 DDLog(@"\n===========response===========\n%@:\n%@", aPath,responseObject);
                 id error = [self handleResponse:responseObject autoShowError:autoShowError];
                 if (error) {
@@ -628,6 +669,7 @@ static dispatch_once_t onceTokenForUC;
                     [self successRequestWithTask:task res:responseObject block:block];
                 }
             } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+                DCNotifyNetworkTask(task, nil, error);
                 [self failRequestWithTask:task error:error block:block];
             }];
             break;
@@ -660,9 +702,11 @@ static dispatch_once_t onceTokenForUC;
     } progress:^(NSProgress * _Nonnull uploadProgress) {
 
     } success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+        DCNotifyNetworkTask(task, responseObject, nil);
         DDLog(@"\n===========response===========\n%@:\n%@", url, responseObject);
         [self successRequestWithTask:task res:responseObject block:completeBlock];
     } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+        DCNotifyNetworkTask(task, nil, error);
         [self failRequestWithTask:task error:error block:completeBlock];
     }];
 }
@@ -689,6 +733,7 @@ static dispatch_once_t onceTokenForUC;
         DDLog(@"downloadFile ---> fileStr:%@",fileStr);
         return [NSURL fileURLWithPath:fileStr];
     } completionHandler:^(NSURLResponse * _Nonnull response, NSURL * _Nullable filePath, NSError * _Nullable error) {
+        DCNotifyNetworkRequest(request, response, filePath, error);
         if (error) {
             [self failRequestWithTask:nil error:error block:completeBlock];
             DDLog(@"downloadFile ---> error:%@",error);
@@ -728,6 +773,7 @@ static dispatch_once_t onceTokenForUC;
 		DDLog(@"downloadFile ---> fileStr:%@",fileStr);
 		return [NSURL fileURLWithPath:fileStr];
 	} completionHandler:^(NSURLResponse * _Nonnull response, NSURL * _Nullable filePath, NSError * _Nullable error) {
+		DCNotifyNetworkRequest(request, response, filePath, error);
 		if (error) {
 			[self failRequestWithTask:nil error:error block:completeBlock];
 			DDLog(@"downloadFile ---> error:%@",error);
