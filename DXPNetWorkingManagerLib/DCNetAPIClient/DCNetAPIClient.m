@@ -265,6 +265,9 @@ static dispatch_once_t onceTokenForUC;
                     apathNew = [apathNew stringByReplacingOccurrencesOfString:@"ecare/webs" withString:@""];
                     apathNew = [apathNew stringByReplacingOccurrencesOfString:@"/promotion-rest-boot" withString:@""];
                     apathNew = [apathNew stringByReplacingOccurrencesOfString:@"/ecare" withString:@""];
+                    // 取出path
+                    apathNew = DXPPathByStrippingBaseURL(apathNew);
+                    
                     if (self.newSignCodeModel) {
                         NSString *baseUrl = nil;
                         NSString *sortedQuery = nil;
@@ -283,8 +286,10 @@ static dispatch_once_t onceTokenForUC;
                 
                 apathNew = [apathNew stringByReplacingOccurrencesOfString:@"/mccm-outerfront/dmc/" withString:@"/"];
                 apathNew = [apathNew stringByReplacingOccurrencesOfString:@"mccm-outerfront/dmc/" withString:@"/"];
-                
                 apathNew = [apathNew stringByReplacingOccurrencesOfString:@"ecare/" withString:@"/"];
+                // 取出path
+                apathNew = DXPPathByStrippingBaseURL(apathNew);
+                
                 _dcMD5SerectStr = dcIsEmptyString(_dcMD5SerectStr)?@"32BytesString":_dcMD5SerectStr;
                
                 DDLog(@"=========aPathStr========%@",apathNew);
@@ -349,6 +354,9 @@ static dispatch_once_t onceTokenForUC;
                 apathNew = [apathNew stringByReplacingOccurrencesOfString:@"ecare/webs" withString:@""];
                 apathNew = [apathNew stringByReplacingOccurrencesOfString:@"/promotion-rest-boot" withString:@""];
                 apathNew = [apathNew stringByReplacingOccurrencesOfString:@"/ecare" withString:@""];
+                // 取出path
+                apathNew = DXPPathByStrippingBaseURL(apathNew);
+                
                 if (self.newSignCodeModel) {
                     NSString *body = dcIsEmptyString([self dictionaryToJson:params])?@"{}":[self dictionaryToJson:params];
                     NSString *bodyHash = [body SHA256];
@@ -367,6 +375,8 @@ static dispatch_once_t onceTokenForUC;
                 apathNew = [apathNew stringByReplacingOccurrencesOfString:@"/mccm-outerfront/dmc/" withString:@"/"];
                 apathNew = [apathNew stringByReplacingOccurrencesOfString:@"mccm-outerfront/dmc/" withString:@"/"];
                 apathNew = [apathNew stringByReplacingOccurrencesOfString:@"ecare/" withString:@"/"];
+                // 取出path
+                apathNew = DXPPathByStrippingBaseURL(apathNew);
                 
 				NSString *md5str = @"";
                 if ([aPath containsString:@"promotion-rest-boot"]) {
@@ -444,6 +454,9 @@ static dispatch_once_t onceTokenForUC;
                 apathNew = [apathNew stringByReplacingOccurrencesOfString:@"ecare/webs" withString:@""];
                 apathNew = [apathNew stringByReplacingOccurrencesOfString:@"/promotion-rest-boot" withString:@""];
                 apathNew = [apathNew stringByReplacingOccurrencesOfString:@"/ecare" withString:@""];
+                // 取出path
+                apathNew = DXPPathByStrippingBaseURL(apathNew);
+                
                 if (self.newSignCodeModel) {
                     NSString *body = dcIsEmptyString([self dictionaryToJson:params])?@"{}":[self dictionaryToJson:params];
                     NSString *bodyHash = [body SHA256];
@@ -461,6 +474,8 @@ static dispatch_once_t onceTokenForUC;
                 apathNew = [apathNew stringByReplacingOccurrencesOfString:@"/mccm-outerfront/dmc/" withString:@"/"];
                 apathNew = [apathNew stringByReplacingOccurrencesOfString:@"mccm-outerfront/dmc/" withString:@"/"];
                 apathNew = [apathNew stringByReplacingOccurrencesOfString:@"ecare/" withString:@"/"];
+                // 取出path
+                apathNew = DXPPathByStrippingBaseURL(apathNew);
                 
                 NSString *md5str = @"";
                 if ([aPath containsString:@"promotion-rest-boot"]) {
@@ -529,6 +544,9 @@ static dispatch_once_t onceTokenForUC;
                 apathNew = [apathNew stringByReplacingOccurrencesOfString:@"ecare/webs" withString:@""];
                 apathNew = [apathNew stringByReplacingOccurrencesOfString:@"/promotion-rest-boot" withString:@""];
                 apathNew = [apathNew stringByReplacingOccurrencesOfString:@"/ecare" withString:@""];
+                // 取出path
+                apathNew = DXPPathByStrippingBaseURL(apathNew);
+                
                 if (self.newSignCodeModel) {
                     NSString *body = dcIsEmptyString([self dictionaryToJson:params])?@"{}":[self dictionaryToJson:params];
                     NSString *bodyHash = [body SHA256];
@@ -546,6 +564,8 @@ static dispatch_once_t onceTokenForUC;
                 apathNew = [apathNew stringByReplacingOccurrencesOfString:@"/mccm-outerfront/dmc/" withString:@"/"];
                 apathNew = [apathNew stringByReplacingOccurrencesOfString:@"mccm-outerfront/dmc/" withString:@"/"];
                 apathNew = [apathNew stringByReplacingOccurrencesOfString:@"ecare/" withString:@"/"];
+                // 取出path
+                apathNew = DXPPathByStrippingBaseURL(apathNew);
                 
                 NSString *md5str = @"";
                 if ([aPath containsString:@"promotion-rest-boot"]) {
@@ -1175,5 +1195,28 @@ static dispatch_once_t onceTokenForUC;
     return YES;
 }
 
+NSString *DXPPathByStrippingBaseURL(NSString *urlString) {
+    if (urlString.length == 0) {
+        return urlString;
+    }
+
+    NSRange scheme = [urlString rangeOfString:@"://"];
+    if (scheme.location == NSNotFound) {
+        return urlString;
+    }
+
+    NSUInteger searchFrom = NSMaxRange(scheme);
+    if (searchFrom >= urlString.length) {
+        return urlString;
+    }
+
+    NSRange slash = [urlString rangeOfString:@"/"
+                                     options:0
+                                       range:NSMakeRange(searchFrom, urlString.length - searchFrom)];
+    if (slash.location == NSNotFound) {
+        return urlString;
+    }
+    return [urlString substringFromIndex:slash.location];
+}
 
 @end
